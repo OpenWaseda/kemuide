@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="jp">
+	<head>
+		<!-- KEMU Environment by yasuo-ozu -->
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1">
+		<title>KEMU Environment</title>
+		<link href="css/bootstrap.min.css" rel="stylesheet">
+		<link href="css/main.css" rel="stylesheet">
+	</head>
+	<body>
+		<h1>KEMU-IDE</h1>
+		<div class="btn-group" role="group">
+			<button type="button" class="btn btn-default" onclick="buttonNew()">
+				<span class="glyphicon glyphicon-file" aria-hidden="true"></span> 新規作成
+			</button>
+			<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+				<span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span> 開く
+			</button>
+			<ul class="dropdown-menu" role="menu">
+				<li role="presentation"><a role="menuitem" tabindex="-1" onclick="buttonOpenFile()">ファイルを開く</a></li>
+				<li role="presentation"><a role="menuitem" tabindex="-1" onclick="buttonOpenSample()">サンプルを開く</a></li>
+			</ul>
+		</div>
+		<div class="btn-group" role="group">
+			<button type="button" class="btn btn-default" onclick="buttonAssemble()">
+				<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> アセンブル
+			</button>
+			<button type="button" class="btn btn-default" onclick="buttonRun()">
+				<span class="glyphicon glyphicon-play" aria-hidden="true"></span> KUE-CHIP2で実行
+			</button>
+			<button type="button" class="btn btn-default" onclick="buttonOpenCore()">
+				<span class="glyphicon glyphicon-hdd" aria-hidden="true"></span> 空のKUE-CHIP2を起動
+			</button>
+		</div>
+		<div class="btn-group" role="group">
+			<button type="button" class="btn btn-default" onclick="buttonManual()">
+				<span class="glyphicon glyphicon-book" aria-hidden="true"></span> マニュアル
+			</button>
+		</div>
+		<div id="droparea">Drag and drop here</div>
+		<div id="editor">
+N:      EQU     80H
+SUM:    EQU     81H
+        LD      IX,     [N]
+        LD      ACC,    0
+LOOP:   ADD     ACC,    IX
+        SUB     IX,     1
+        BP      LOOP
+        ST      ACC,    [SUM]
+        HLT
+        END
+</div>
+		<h2>出力</h2>
+		<div id="output"></div>
+		<button type="button" class="btn btn-default" style="float: right" onclick="buttonClearOutput()">
+			<span class="glyphicon glyphicon-trash" aria-hidden="true"></span> クリア
+		</button>
+
+		<script src="js/jquery.min.js"></script>
+		<script src="js/bootstrap.min.js"></script>
+		<script src="js/ace.js"></script>
+		<script src="js/kemu-assembler.js"></script>
+		<script>
+			window.textModified = false;
+
+			$(function(){
+				window.editor = ace.edit("editor");
+				editor.setAutoScrollEditorIntoView(true);
+				editor.setOption("maxLines", 40);
+
+				editor.on('change', function(e){ textModified = true; });
+
+				$(window).on('beforeunload', function(){
+					if (textModified && editor.getValue() != '') return "変更が破棄されます。よろしいですか?";
+				});
+
+				var cancelEvent = function(e){
+					e.preventDefault();
+					e.stopPropagation();
+					return false;
+				}
+				$('#droparea').on('dragenter', cancelEvent);
+				$('#droparea').on('dragover', cancelEvent);
+				$("#droparea").on("drop",function(event){
+					var e = event.originalEvent;
+					e.preventDefault();
+					console.log(e);
+					e.dataTransfer.dropEffect = 'copy';
+					var files = e.dataTransfer.files;
+					if (files.length > 0) {
+						var r = new FileReader();
+						r.onload = function(){
+							if (!textModified || editor.getValue() == '' || confirm("変更が破棄されます。よろしいですか?")) {
+								editor.setValue(r.result);
+								$('#droparea').css('display', 'none');
+								textModified = false;
+							}
+						};
+						r.readAsText(files[0]);
+					}
+				});
+			});
+
+			function buttonNew() {
+				if (!textModified || editor.getValue() == '' || confirm("変更が破棄されます。よろしいですか?")) {
+					editor.setValue("");
+					textModified = false;
+				}
+				return false;
+			}
+
+			function buttonOpenFile() {
+				$("#droparea").toggle();
+				return false;
+			}
+
+			function buttonOpenSample() {
+				alert("サンプルはまだありません");
+				return false;
+			}
+
+			function buttonAssemble() {
+				var kasm = new KemuAssembler();
+				kasm.message = function(m) {
+					var $item = $('<div>');
+					if (m.indexOf("エラー") != -1) $item.addClass('itemError');
+					if (m.indexOf("情報") != -1) $item.addClass('itemInfo');
+					$item.text(m);
+					$item.on('click', function(){
+						if ($item.hasClass('expanded')) {
+							$item.removeClass('expanded');
+						} else {
+							$item.addClass('expanded');
+						}
+					});
+					$('#output').append($item);
+					$('#output').scrollTop(document.getElementById('output').scrollHeight);
+				};
+				if (kasm.assemble(editor.getValue())) {
+					var s = "", i;
+					for (i = 0; i < kasm.binary.length; i++) {
+						s += ("00" + kasm.binary[i].toString(16)).slice(-2) + ' ';
+					}
+					kasm.message(s);
+				}
+				console.log(kasm.binary);
+				return false;
+			}
+
+			function buttonRun() {
+				return false;
+			}
+			function buttonOpenCore() {
+				return false;
+			}
+			function buttonManual() {
+				window.open('manual.html','_blank');
+				return false;
+			}
+			function buttonClearOutput() {
+				$('#output').empty();
+			}
+		</script>
+	</body>
+</html>
+
