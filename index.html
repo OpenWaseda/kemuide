@@ -29,9 +29,11 @@
 			<button type="button" class="btn btn-default" onclick="buttonRun()">
 				<span class="glyphicon glyphicon-play" aria-hidden="true"></span> KUE-CHIP2で実行
 			</button>
+			<!--
 			<button type="button" class="btn btn-default" onclick="buttonOpenCore()">
 				<span class="glyphicon glyphicon-hdd" aria-hidden="true"></span> 空のKUE-CHIP2を起動
 			</button>
+			-->
 		</div>
 		<div class="btn-group" role="group">
 			<button type="button" class="btn btn-default" onclick="buttonManual()">
@@ -56,6 +58,7 @@ LOOP:   ADD     ACC,    IX
 		<button type="button" class="btn btn-default" style="float: right" onclick="buttonClearOutput()">
 			<span class="glyphicon glyphicon-trash" aria-hidden="true"></span> クリア
 		</button>
+		<div style="margin: 4em 0; padding: 1em; border-top: 1px solid #aaa; text-align: center; color: #666">作成: 早稲田大学基幹理工学部電子物理システム学科 小津 <a href="https://github.com/OpenWaseda/kemuide" target="_blank">GitHub</a></div>
 
 		<script src="js/jquery.min.js"></script>
 		<script src="js/bootstrap.min.js"></script>
@@ -102,6 +105,22 @@ LOOP:   ADD     ACC,    IX
 				});
 			});
 
+			function writeOutput(m) {
+				var $item = $('<div>');
+				if (m.indexOf("エラー") != -1) $item.addClass('itemError');
+				if (m.indexOf("情報") != -1) $item.addClass('itemInfo');
+				$item.text(m);
+				$item.on('click', function(){
+					if ($item.hasClass('expanded')) {
+						$item.removeClass('expanded');
+					} else {
+						$item.addClass('expanded');
+					}
+				});
+				$('#output').append($item);
+				$('#output').scrollTop(document.getElementById('output').scrollHeight);
+			}
+
 			function buttonNew() {
 				if (!textModified || editor.getValue() == '' || confirm("変更が破棄されます。よろしいですか?")) {
 					editor.setValue("");
@@ -120,23 +139,9 @@ LOOP:   ADD     ACC,    IX
 				return false;
 			}
 
+			var kasm = new KemuAssembler();
+			kasm.message = writeOutput;
 			function buttonAssemble() {
-				var kasm = new KemuAssembler();
-				kasm.message = function(m) {
-					var $item = $('<div>');
-					if (m.indexOf("エラー") != -1) $item.addClass('itemError');
-					if (m.indexOf("情報") != -1) $item.addClass('itemInfo');
-					$item.text(m);
-					$item.on('click', function(){
-						if ($item.hasClass('expanded')) {
-							$item.removeClass('expanded');
-						} else {
-							$item.addClass('expanded');
-						}
-					});
-					$('#output').append($item);
-					$('#output').scrollTop(document.getElementById('output').scrollHeight);
-				};
 				if (kasm.assemble(editor.getValue())) {
 					var s = "", i;
 					for (i = 0; i < kasm.binary.length; i++) {
@@ -144,11 +149,20 @@ LOOP:   ADD     ACC,    IX
 					}
 					kasm.message(s);
 				}
-				console.log(kasm.binary);
 				return false;
 			}
 
 			function buttonRun() {
+				if (kasm.assemble(editor.getValue())) {
+					var s = "[", i;
+					for (i = 0; i < kasm.binary.length; i++) {
+						if (i > 0) s += ", ";
+						s += kasm.binary[i].toString(10);
+					}
+					s += "]";
+					localStorage["KUE-CHIP2_CodeMemory"] = s;
+					window.open('emu/index.html','_blank');
+				}
 				return false;
 			}
 			function buttonOpenCore() {

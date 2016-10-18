@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KUE-CHIP2 Emulator</title>
+<link href="css/bootstrap.min.css" rel="stylesheet">
+<!--[if lt IE 9]>
+<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+<![endif]-->
+</head>
+<style>
+body {
+	font-family: Consolas, 'Courier New', Courier, Monaco, monospace;
+	font-size: 14px;
+	line-height: 1.2;
+}
+td input {
+	width: 100%;
+	height: 100%;
+	box-sizing: border-box;
+	border: 0;
+}
+#codememtab, #codememtable {
+	background-color: #bbffbb;
+}
+#datamemtab, #datamemtable {
+	background-color: #ffffbb;
+}
+#uploadArea {
+	height: 64px;
+	padding-top: 16px;
+	border: 2px dashed #c6c6c6;
+	font-size: 20px;
+}
+</style>
+<script src="./js/kuechip2.js"></script>
+<script>
+onload = function(){
+	var dropZone = document.getElementById('uploadArea');
+	dropZone.addEventListener('dragover', handleDragOver, false);
+	dropZone.addEventListener('drop', handleFileSelect, false);
+	initCPU();
+	initView();
+	updateView();
+}
+
+</script>
+<body>
+<div class="container">
+	<h2>KUE-CHIP2 Emulator</h2>
+	<div class="btn-group" role="group" aria-label="controls">
+		<button type="button" class="btn btn-default" onclick="nextPhase(); updateView();">Single Phase</button>
+		<button type="button" class="btn btn-default" onclick="nextInstr(); updateView();">Single Instruction</button>
+		<button type="button" class="btn btn-default" onclick="runCPU()">Start/Stop</button>
+		<button type="button" class="btn btn-default" onclick="resetCPU()">Reset</button>
+		<button type="button" class="btn btn-default" onclick="clearData()">Clear Data Memory</button>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
+			<h3>Registers</h3>
+			<div id="regtable"></div>
+			<div id="uploadArea" class="text-center">Upload Hex text</div>
+		</div>
+		<div class="col-xs-12 col-sm-8 col-md-8 col-lg-8">
+			<h3>Memory</h3>
+			<p>Click a cell to edit memory.</p>
+			<ul class="nav nav-tabs" role="tablist">
+				<li role="presentation" class="active">
+					<a id="codememtab" href="#codememtable"
+						aria-controls="codememtable" role="tab" data-toggle="tab">Code</a>
+				</li>
+				<li role="presentation">
+					<a id="datamemtab" href="#datamemtable"
+						aria-controls="datamemtable" role="tab" data-toggle="tab">Data</a>
+				</li>
+			</ul>
+			<div class="tab-content">
+				<div role="tabpanel" class="tab-pane active" id="codememtable">
+				</div>
+				<div role="tabpanel" class="tab-pane" id="datamemtable">
+				</div>
+			</div>
+		</div>
+	</div>
+	<div style="padding-bottom: 128px;">
+	<p>Author: <a href="https://hikalium.com">hikalium</a></p>
+	<p>See this project on <a href="https://github.com/hikalium/kuechip2emu">GitHub</a></p>
+	</div>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+</body>
+</html>

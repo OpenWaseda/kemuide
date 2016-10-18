@@ -43,13 +43,19 @@
 			</li>
 			<li role="presentation">
 				<a id="tab_memory" href="#content_memory"
-					aria-controls="content_memory" role="tab" data-toggle="tab">メモリ</a>
+					aria-controls="content_memory" role="tab" data-toggle="tab">プログラムメモリ</a>
+			</li>
+			<li role="presentation">
+				<a id="tab_memory" href="#content_memory"
+					aria-controls="content_user" role="tab" data-toggle="tab">ユーザーメモリ</a>
 			</li>
 		</ul>
 		<div class="tab-content">
 			<div role="tabpanel" class="tab-pane active" id="content_reassemble">
 			</div>
 			<div role="tabpanel" class="tab-pane" id="content_memory">
+			</div>
+			<div role="tabpanel" class="tab-pane" id="content_user">
 			</div>
 		</div>
 
@@ -89,6 +95,15 @@
 						r.readAsText(files[0]);
 					}
 				});
+
+				// HexEdit
+
+				var $table1 = $('<table>') $table2 = $('<table>');
+				for (var i = 0; i < 16; i++) {
+				}	
+				$('#content_memory').append($table1);
+				$('#content_user').append($table1);
+
 			});
 
 			function buttonOpenFile() {
