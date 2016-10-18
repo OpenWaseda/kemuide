@@ -10,46 +10,60 @@
 	<body>
 		<h1>KEMU Emurator</h1>
 		<div class="btn-group" role="group">
-			<button type="button" class="btn btn-default" onclick="buttonNew()">
+			<button type="button" class="btn btn-default" onclick="buttonOpenFile()">
 				<span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span> ファイルの読み込み
 			</button>
 		</div>
 		<div class="btn-group" role="group">
-			<button type="button" class="btn btn-default" onclick="buttonNew()">
+			<button type="button" class="btn btn-default" onclick="buttonRunStop()">
 				<span class="glyphicon glyphicon-play" aria-hidden="true"></span> 実行/停止
 			</button>
-			<button type="button" class="btn btn-default">
+			<button type="button" class="btn btn-default" onclick="buttonStep()">
 				<span class="glyphicon glyphicon-step-forward" aria-hidden="true"></span> ステップ実行
 			</button>
-			<button type="button" class="btn btn-default">
+			<button type="button" class="btn btn-default" onclick="buttonPhase()">
 				<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span> フェーズを実行
 			</button>
-			<button type="button" class="btn btn-default">
+			<button type="button" class="btn btn-default" onclick="buttonReset()">
 				<span class="glyphicon glyphicon-eject" aria-hidden="true"></span> リセット
 			</button>
-			<button type="button" class="btn btn-default">
+			<button type="button" class="btn btn-default" onclick="buttonClear()">
 				<span class="glyphicon glyphicon-trash" aria-hidden="true"></span> メモリのクリア
 			</button>
+		</div>
+		<div id="droparea">Drop hex text or binary</div>
+		<div id="statusbox">
+			PC: 08H<br>
+			MAR: 07H<br>
+		</div>
+		<ul class="nav nav-tabs" role="tablist">
+			<li role="presentation" class="active">
+				<a id="tab_reassemble" href="#content_reassemble"
+					aria-controls="content_reassemble" role="tab" data-toggle="tab">逆アセンブル</a>
+			</li>
+			<li role="presentation">
+				<a id="tab_memory" href="#content_memory"
+					aria-controls="content_memory" role="tab" data-toggle="tab">メモリ</a>
+			</li>
+		</ul>
+		<div class="tab-content">
+			<div role="tabpanel" class="tab-pane active" id="content_reassemble">
+			</div>
+			<div role="tabpanel" class="tab-pane" id="content_memory">
+			</div>
 		</div>
 
 		<script src="js/jquery.min.js"></script>
 		<script src="js/bootstrap.min.js"></script>
-		<script src="js/ace.js"></script>
-		<script src="js/kemu-assembler.js"></script>
 		<script>
-			window.textModified = false;
 
+			var textModified = false;
 			$(function(){
-				window.editor = ace.edit("editor");
-				editor.setAutoScrollEditorIntoView(true);
-				editor.setOption("maxLines", 40);
-
-				editor.on('change', function(e){ textModified = true; });
-
 				$(window).on('beforeunload', function(){
 					if (textModified && editor.getValue() != '') return "変更が破棄されます。よろしいですか?";
 				});
 
+				// Drag and Drop
 				var cancelEvent = function(e){
 					e.preventDefault();
 					e.stopPropagation();
@@ -77,64 +91,29 @@
 				});
 			});
 
-			function buttonNew() {
-				if (!textModified || editor.getValue() == '' || confirm("変更が破棄されます。よろしいですか?")) {
-					editor.setValue("");
-					textModified = false;
-				}
-				return false;
-			}
-
 			function buttonOpenFile() {
 				$("#droparea").toggle();
 				return false;
 			}
 
-			function buttonOpenSample() {
-				alert("サンプルはまだありません");
-				return false;
+			function buttonRunStop() {
+				
 			}
 
-			function buttonAssemble() {
-				var kasm = new KemuAssembler();
-				kasm.message = function(m) {
-					var $item = $('<div>');
-					if (m.indexOf("エラー") != -1) $item.addClass('itemError');
-					if (m.indexOf("情報") != -1) $item.addClass('itemInfo');
-					$item.text(m);
-					$item.on('click', function(){
-						if ($item.hasClass('expanded')) {
-							$item.removeClass('expanded');
-						} else {
-							$item.addClass('expanded');
-						}
-					});
-					$('#output').append($item);
-					$('#output').scrollTop(document.getElementById('output').scrollHeight);
-				};
-				if (kasm.assemble(editor.getValue())) {
-					var s = "", i;
-					for (i = 0; i < kasm.binary.length; i++) {
-						s += ("00" + kasm.binary[i].toString(16)).slice(-2) + ' ';
-					}
-					kasm.message(s);
-				}
-				console.log(kasm.binary);
-				return false;
+			function buttonStep() {
+				
 			}
 
-			function buttonRun() {
-				return false;
+			function buttonPhase() {
+				
 			}
-			function buttonOpenCore() {
-				return false;
+
+			function buttonReset() {
+				
 			}
-			function buttonManual() {
-				window.open('manual.html','_blank');
-				return false;
-			}
-			function buttonClearOutput() {
-				$('#output').empty();
+
+			function buttonClear() {
+				
 			}
 		</script>
 	</body>
