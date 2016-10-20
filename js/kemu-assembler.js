@@ -152,10 +152,7 @@
 							if (a[2] != ",") throw new KasmException("'" + a[1] + "' の後に ',' が必要です");
 							if      (a[3] == "ACC") op_b = 0;
 							else if (a[3] == "IX")  op_b = 1;
-							else if (typeof a[3] == "number") {
-								val = a[3];
-								op_b = 2;
-							} else if (a[3] == "[" || a[3] == "(") {
+							else if (a[3] == "[" || a[3] == "(") {
 								val = -2;
 								op_b = (a[3] == "[" ? 4 : 5);
 								a.splice(0, 4);
@@ -169,7 +166,12 @@
 								} else {
 									throw new KasmException("閉じ括弧がありません");
 								}
-							} else throw new KasmException("第二オペランドが認識できません。");
+							} else {
+								val = -2;
+								op_b = 2;
+								a.splice(0, 3);
+
+							}
 							code += ((op_a << 3) + op_b);
 							this.binary[addr++] = code;
 							if (val != -1) {
