@@ -33,8 +33,6 @@
 		</div>
 		<div id="droparea">Drop hex text or binary</div>
 		<div id="statusbox">
-			PC: 08H<br>
-			MAR: 07H<br>
 		</div>
 		<ul class="nav nav-tabs" role="tablist">
 			<li role="presentation" class="active">
@@ -71,6 +69,7 @@
 
 		<script src="js/jquery.min.js"></script>
 		<script src="js/bootstrap.min.js"></script>
+		<script src="js/kemu-core.js"></script>
 		<script>
 
 			var textModified = false;
@@ -78,6 +77,25 @@
 				"ACC": null, "IX": null, "FLAG": null, "IR": null, "PC": null, "MAR": null, "NextPhase": null
 			};
 			var memoryControl = {};
+			var core = new KemuCore();
+
+
+			function loadHex(s) {
+				var i = 0, n = 0;
+				while (true) {
+					while (i < s.length && s[i].match(/\s/)) i++;
+					if (i >= s.length) break;
+					var str = "";
+					while (i < s.length && s[i].match(/[0-9a-fA-F]/)) str += s[i++];
+					if (i < s.length && !s[i].match(/\s/)) return false;
+					var val = parseInt(str, 16);
+					if ((val & ~0xFF) != 0) return false;
+					core.memory[n++] = val;
+				}
+				if (n > 0x200) return false;
+				while (n < 0x200) core.memory[n++] = 0;
+				return true;
+			}
 
 			function initializeInterface() {
 				var initMemTable = function(n, $e){
@@ -125,6 +143,16 @@
 				initMemTable(0x100, $('#content_user'));
 			}
 
+			function updateInterface() {
+				statusControl["ACC" ].val(core.regACC.toString(16).toUpperCase());
+				statusControl["IX"  ].val(core.regIX.toString(16).toUpperCase());
+				statusControl["FLAG"].val(core.regFLAG.toString(16).toUpperCase());
+				statusControl["IR"  ].val(core.regIR.toString(16).toUpperCase());
+				statusControl["PC"  ].val(core.regPC.toString(16).toUpperCase());
+				statusControl["MAR" ].val(core.regMAR.toString(16).toUpperCase());
+				statusControl["NextPhase"].val(core.phase.toString(16).toUpperCase());
+			}
+
 			$(function(){
 				$(window).on('beforeunload', function(){
 					if (textModified && editor.getValue() != '') return "変更が破棄されます。よろしいですか?";
@@ -158,6 +186,14 @@
 				});
 
 				initializeInterface();
+				updateInterface();
+
+				if (localStorage['KEMU_EMU_HEX']) {
+					if (!loadHex(localStorage['KEMU_EMU_HEX'])) {
+						alert("データの読み込みに失敗しました。");
+					}
+					else delete localStorage['KEMU_EMU_HEX'];
+				}
 			});
 
 			function buttonOpenFile() {

@@ -195,6 +195,6 @@
 		}
 	};
 
-	window['kemuCore'] = kemuCore;
+	window['KemuCore'] = kemuCore;
 
 })(window);

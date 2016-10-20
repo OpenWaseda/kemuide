@@ -154,14 +154,13 @@ LOOP:   ADD     ACC,    IX
 
 			function buttonRun() {
 				if (kasm.assemble(editor.getValue())) {
-					var s = "[", i;
+					var s = "", i;
 					for (i = 0; i < kasm.binary.length; i++) {
-						if (i > 0) s += ", ";
-						s += kasm.binary[i].toString(10);
+						if (i > 0) s += " ";
+						s += kasm.binary[i].toString(16);
 					}
-					s += "]";
-					localStorage["KUE-CHIP2_CodeMemory"] = s;
-					window.open('emu/index.html','_blank');
+					localStorage["KEMU_EMU_HEX"] = s;
+					window.open('core.html','_blank');
 				}
 				return false;
 			}
