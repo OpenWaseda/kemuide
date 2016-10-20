@@ -44,7 +44,7 @@
 					aria-controls="content_memory" role="tab" data-toggle="tab">プログラムメモリ</a>
 			</li>
 			<li role="presentation">
-				<a id="tab_memory" href="#content_memory"
+				<a id="tab_memory" href="#content_user"
 					aria-controls="content_user" role="tab" data-toggle="tab">ユーザーメモリ</a>
 			</li>
 		</ul>
@@ -103,8 +103,8 @@
 						.css('margin', '1em 0')
 						.addClass("table")
 						.addClass("table-bordered");
-					var tr = $('<tr>').append($('<th>').css('text-align', 'center'));
-					n >>= 4;
+					var tr = $('<tr>').append($('<th>').css('text-align', 'center').text(("00" + n.toString(16)).slice(-3)));
+					// n >>= 4;
 					for(var i = 0; i < 16; i++){
 						tr.append($('<th>').text(("0"+i.toString(16)).slice(-2).toUpperCase()).css('text-align', 'center'));
 					}
@@ -112,17 +112,38 @@
 					var tb = $('<tbody>');
 					for(var i = 0; i < 16; i++){
 						var tr = $('<tr>').append($('<th>')
-								.text(((n + i).toString(16) + "0").toUpperCase())
+								.text(((n + i).toString(16) + "0").slice(-2).toUpperCase())
 								.css('text-align', 'right'));
 						for(var k = 0; k < 16; k++){
 							var d = $('<input>')
 								.attr("type", "text")
-								.attr("name", ""+((i << 4) + k))
+								.data("addr", (n + (i << 4) + k))
 								.css('width', '3em')
 								.css('border', 'none')
 								.css('padding', '0.5em')
 								.addClass("text-center");
-							d.change(function(){});
+							var changeEvent = function(){
+								var d = $(this);
+								var s = d.val().slice(0, d.get(0).selectionStart).replace(/[^0-9A-Fa-f]/g,'');
+								var addr = parseInt(d.data('addr'));
+								while (s.length > 0 && addr < 0x200) {
+									if (s.length >= 2) {
+										core.memory[addr++] = parseInt(s.slice(0, 2), 16);
+										s = s.slice(2);
+									} else {
+										core.memory[addr] = parseInt(s.slice(0, 1), 16) << 4;
+										break;
+									}
+								}
+								updateInterface();
+								if (addr < 0x200) {
+									memoryControl[addr].focus();
+									memoryControl[addr].get(0).selectionStart = s.length > 0 ? 1 : 0;
+									memoryControl[addr].get(0).selectionEnd = s.length > 0 ? 1 : 0;
+								}
+							};
+							d.keyup(changeEvent);
+							d.change(changeEvent);
 							memoryControl[n + (i << 4) + k] = d;
 							tr.append($("<td>").css("padding", "0").css('width', '2em').append(d));
 						}
@@ -143,14 +164,21 @@
 				initMemTable(0x100, $('#content_user'));
 			}
 
-			function updateInterface() {
-				statusControl["ACC" ].val(core.regACC.toString(16).toUpperCase());
-				statusControl["IX"  ].val(core.regIX.toString(16).toUpperCase());
-				statusControl["FLAG"].val(core.regFLAG.toString(16).toUpperCase());
-				statusControl["IR"  ].val(core.regIR.toString(16).toUpperCase());
-				statusControl["PC"  ].val(core.regPC.toString(16).toUpperCase());
-				statusControl["MAR" ].val(core.regMAR.toString(16).toUpperCase());
-				statusControl["NextPhase"].val(core.phase.toString(16).toUpperCase());
+			function updateInterface(anim) {
+				var cpustat = {
+					"ACC": core.regACC, "IX": core.regIX, "FLAG": core.regFLAG, "IR": core.regIR,
+					"PC": core.regPC, "MAR": core.regMAR, "NextPhase": core.phase
+				};
+				for (var key in cpustat) {
+					if (!key) continue;
+					var s = cpustat[key].toString(16).toUpperCase();
+					if (!anim || statusControl[key].val() != s)
+						statusControl[key].val(s);
+				}
+				for (var i = 0; i < 0x200; i++) {
+					var s = ('0' + core.memory[i].toString(16).toUpperCase()).slice(-2);
+					if (!anim || s != memoryControl.val()) memoryControl[i].val(s);
+				}
 			}
 
 			$(function(){
@@ -185,15 +213,15 @@
 					}
 				});
 
-				initializeInterface();
-				updateInterface();
-
 				if (localStorage['KEMU_EMU_HEX']) {
 					if (!loadHex(localStorage['KEMU_EMU_HEX'])) {
 						alert("データの読み込みに失敗しました。");
 					}
 					else delete localStorage['KEMU_EMU_HEX'];
 				}
+
+				initializeInterface();
+				updateInterface();
 			});
 
 			function buttonOpenFile() {
