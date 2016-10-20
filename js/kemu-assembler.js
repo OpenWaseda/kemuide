@@ -110,6 +110,7 @@
 			var errorCount = 0;
 			var labels = {};
 			var patches = [];
+			var ended = -1;
 			var metadata = [], addrToMetadata = {};
 			this.message("アセンブルを開始しました。");
 			for (var l = 0; l < lines.length; l++) {
@@ -118,6 +119,13 @@
 				try {
 					var meta = {line: l, address: addr, jumpTo: -1, jumpMode: 0, reachable: 0, opecode: null};
 					var a = this.tokenize(line);
+					if (ended >= 0) {
+						if (a.length > 0) {
+							this.message("情報(" + (ended+1) + "行目): ここに'END'があります。これ以降に記述された命令はアセンブルされません。");
+							break;
+						}
+						continue;
+					}
 					while (a.length >= 2 && a[1] == ":") {
 						if (typeof a[0] == "string") {
 							if (labels[a[0]]) {
@@ -189,7 +197,7 @@
 								meta.jumpMode = -1;
 							}
 						} else if (a[0] == "END") {
-							break;
+							ended = l;
 						} else if (branchCC[a[0]] != undefined) {
 							this.binary[addr++] = branchCC[a[0]] + 48;
 							patches.push({address: addr, token: a.slice(1), line:l});

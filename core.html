@@ -64,6 +64,38 @@
 		<script>
 
 			var textModified = false;
+			var statusControl = {
+				"ACC": null, "IX": null, "FLAG": null, "IR": null, "PC": null, "MAR": null, "NextPhase": null
+			};
+
+			function initializeInterface() {
+				var initMemTable = function(){
+				
+				
+				};
+				var t = $('<table>').addClass("table").addClass("table-bordered");
+				t.append($('<thead>').append(
+					$('<tr>')
+					.append($('<th>').text("レジスタ名").css("width", "20%"))
+					.append($('<th>').text("Data"))
+				));
+				var tb = $('<tbody>');
+				for(k in statusControl){
+					if (!k) continue;
+					statusControl[k] = $('<input>').attr('type', 'text');
+					tb.append(
+						$('<tr>')
+						.append($('<th>').text(k))
+						.append($('<td');
+						.append(statusControl[k].text("-"))
+					)
+				}
+				t.append(tb);
+				$("#regtable").append(t);
+
+
+			}
+
 			$(function(){
 				$(window).on('beforeunload', function(){
 					if (textModified && editor.getValue() != '') return "変更が破棄されます。よろしいですか?";
