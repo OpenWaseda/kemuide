@@ -52,6 +52,16 @@
 		</ul>
 		<div class="tab-content">
 			<div role="tabpanel" class="tab-pane active" id="content_reassemble">
+				<table class="table table-bordered" style="margin: 1em 0">
+					<thead>
+						<th style="width: 4em;">Addr</th>
+						<th style="width: 2em;">BP</th>
+						<th>機械語</th>
+						<th>逆アセンブル</th>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
 			</div>
 			<div role="tabpanel" class="tab-pane" id="content_memory">
 			</div>
@@ -67,33 +77,52 @@
 			var statusControl = {
 				"ACC": null, "IX": null, "FLAG": null, "IR": null, "PC": null, "MAR": null, "NextPhase": null
 			};
+			var memoryControl = {};
 
 			function initializeInterface() {
-				var initMemTable = function(){
-				
-				
+				var initMemTable = function(n, $e){
+					var t = $('<table>')
+						.css('margin', '1em 0')
+						.addClass("table")
+						.addClass("table-bordered");
+					var tr = $('<tr>').append($('<th>').css('text-align', 'center'));
+					n >>= 4;
+					for(var i = 0; i < 16; i++){
+						tr.append($('<th>').text(("0"+i.toString(16)).slice(-2).toUpperCase()).css('text-align', 'center'));
+					}
+					t.append($('<thead>').append(tr));
+					var tb = $('<tbody>');
+					for(var i = 0; i < 16; i++){
+						var tr = $('<tr>').append($('<th>')
+								.text(((n + i).toString(16) + "0").toUpperCase())
+								.css('text-align', 'right'));
+						for(var k = 0; k < 16; k++){
+							var d = $('<input>')
+								.attr("type", "text")
+								.attr("name", ""+((i << 4) + k))
+								.css('width', '3em')
+								.css('border', 'none')
+								.css('padding', '0.5em')
+								.addClass("text-center");
+							d.change(function(){});
+							memoryControl[n + (i << 4) + k] = d;
+							tr.append($("<td>").css("padding", "0").css('width', '2em').append(d));
+						}
+						tb.append(tr);
+					}
+					t.append(tb);
+					$e.append(t);
+
 				};
-				var t = $('<table>').addClass("table").addClass("table-bordered");
-				t.append($('<thead>').append(
-					$('<tr>')
-					.append($('<th>').text("レジスタ名").css("width", "20%"))
-					.append($('<th>').text("Data"))
-				));
-				var tb = $('<tbody>');
+				var $area = $('#statusbox');
+				$area.empty();
 				for(k in statusControl){
 					if (!k) continue;
-					statusControl[k] = $('<input>').attr('type', 'text');
-					tb.append(
-						$('<tr>')
-						.append($('<th>').text(k))
-						.append($('<td');
-						.append(statusControl[k].text("-"))
-					)
+					statusControl[k] = $('<input>').attr('type', 'text').addClass('text-center').data('name', k);
+					$area.append($('<div>').text(k).append(statusControl[k]));
 				}
-				t.append(tb);
-				$("#regtable").append(t);
-
-
+				initMemTable(0, $('#content_memory'));
+				initMemTable(0x100, $('#content_user'));
 			}
 
 			$(function(){
@@ -128,14 +157,7 @@
 					}
 				});
 
-				// HexEdit
-
-				var $table1 = $('<table>') $table2 = $('<table>');
-				for (var i = 0; i < 16; i++) {
-				}	
-				$('#content_memory').append($table1);
-				$('#content_user').append($table1);
-
+				initializeInterface();
 			});
 
 			function buttonOpenFile() {

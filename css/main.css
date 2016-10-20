@@ -56,3 +56,27 @@ a[role=menuitem] {
 	max-height: 99em;
 }
 
+#statusbox {
+	overflow: hidden;
+	border: 1px #bbb solid;
+	padding: 0.5em;
+	margin: 1em 0;
+}
+
+#statusbox>div {
+	float: left;
+	width: 10em;
+	margin: 0.5em;
+	overflow: hidden;
+}
+
+#statusbox>div>input {
+	float: right;
+	width: 3em;
+}
+
+#content_memory>table {
+	width: 100%;
+}
+
+
