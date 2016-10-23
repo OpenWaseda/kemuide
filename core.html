@@ -57,7 +57,7 @@
 						<th>機械語</th>
 						<th>逆アセンブル</th>
 					</thead>
-					<tbody>
+					<tbody id="dasm_body">
 					</tbody>
 				</table>
 			</div>
@@ -72,9 +72,11 @@
 		<script src="js/kemu-core.js"></script>
 		<script>
 
-			var textModified = false;
+			var userMemoryModified = false;
+			var programMemoryModified = false;
 			var statusControl = {
-				"ACC": null, "IX": null, "FLAG": null, "IR": null, "PC": null, "MAR": null, "NextPhase": null
+				"ACC": null, "IX": null, "FLAG": null, "IR": null, "PC": null, "MAR": null, "IBUF": null,
+				"OBUF": null, "PHASE": null
 			};
 			var memoryControl = {};
 			var core = new KemuCore();
@@ -127,6 +129,8 @@
 								var s = d.val().slice(0, d.get(0).selectionStart).replace(/[^0-9A-Fa-f]/g,'');
 								var addr = parseInt(d.data('addr'));
 								while (s.length > 0 && addr < 0x200) {
+									if (addr < 0x100) programMemoryModified = true;
+									else userMemoryModified = true;
 									if (s.length >= 2) {
 										core.memory[addr++] = parseInt(s.slice(0, 2), 16);
 										s = s.slice(2);
@@ -165,25 +169,65 @@
 			}
 
 			function updateInterface(anim) {
-				var cpustat = {
-					"ACC": core.regACC, "IX": core.regIX, "FLAG": core.regFLAG, "IR": core.regIR,
-					"PC": core.regPC, "MAR": core.regMAR, "NextPhase": core.phase
-				};
-				for (var key in cpustat) {
+				for (var key in core.reg) {
 					if (!key) continue;
-					var s = cpustat[key].toString(16).toUpperCase();
+					var s = ("0" + core.reg[key].toString(16)).toUpperCase().slice(-2);
 					if (!anim || statusControl[key].val() != s)
 						statusControl[key].val(s);
 				}
 				for (var i = 0; i < 0x200; i++) {
 					var s = ('0' + core.memory[i].toString(16).toUpperCase()).slice(-2);
-					if (!anim || s != memoryControl.val()) memoryControl[i].val(s);
+					if (!anim || s != memoryControl[i].val()) memoryControl[i].val(s);
+				}
+			}
+
+			function disassemble() {
+				$('#dasm_body').empty();
+				var res = core.disassemble();
+				for (var i = 0; i < res.length; i++) {
+					var text = "", cmd = res[i].disassemble;
+					var count = 0;
+					var tr = $('<tr>');
+					tr.append($('<td>').text(res[i].addr.toString(16).toUpperCase()));
+					for (var j = 0; j < res[i].binary.length; j++) {
+						text += ("0" + res[i].binary[j].toString(16).toUpperCase()).slice(-2) + "&nbsp;";
+					}
+					tr.append($('<td>'));
+					tr.append($('<td>').html(text));
+					text = "";
+					for (var j = 0; j < cmd.length; j++) {
+						var td = $('<td>');
+						if (typeof cmd[j] == "number") {
+							var s = ("0" + cmd[j].toString(16)).toUpperCase().slice(-2) + "H";
+							count += s.length;
+							// text += '<span class="hover_val" data-script="core.memory[' + cmd[j].toString(10) + ']">'
+							//	+ s + "</span>";
+							text += s;
+						} else {
+							var cmdTable = {
+								"ACC": "core.reg['ACC']",
+								"IX" : "core.reg['IX']"
+							};
+							if (cmd[j] in cmdTable) {
+							text += '<span class="hover_val" data-script="' + cmdTable[cmd[j]] + '">'
+								+ cmd[j] + "</span>";
+							} else {
+								text += cmd[j];
+							}
+							count += cmd[j].length;
+						}
+						if (typeof cmd[1] != "number" && (j == 0 || cmd[j] == ",")) {
+							while (count % 8 == 0) text += '&nbsp;', count++;
+						}
+					}
+					tr.append($('<td>').html(text));
+					$('#dasm_body').append(tr);
 				}
 			}
 
 			$(function(){
 				$(window).on('beforeunload', function(){
-					if (textModified && editor.getValue() != '') return "変更が破棄されます。よろしいですか?";
+					if (userMemoryModified || programMemoryModified) return "変更が破棄されます。よろしいですか?";
 				});
 
 				// Drag and Drop
@@ -222,6 +266,7 @@
 
 				initializeInterface();
 				updateInterface();
+				disassemble();
 			});
 
 			function buttonOpenFile() {
@@ -234,19 +279,28 @@
 			}
 
 			function buttonStep() {
-				
+				core.runSingleInstruction();
+				updateInterface(true);
+				return false;
 			}
 
 			function buttonPhase() {
-				
+				core.runSinglePhase();
+				updateInterface(true);
+				return false;
 			}
 
 			function buttonReset() {
-				
+				core.reset();
+				return false;
 			}
 
 			function buttonClear() {
-				
+				if (!userMemoryModified || confirm("メモリの内容が変更されています。本当に初期化してよろしいですか?")) {
+					for (var i = 0x100; i < 0x200; i++) core.memory[i] = 0;
+					userMemoryModified = false;
+					updateInterface();
+				}
 			}
 		</script>
 	</body>
