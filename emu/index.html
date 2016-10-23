@@ -39,12 +39,13 @@ td input {
 <script src="./js/kuechip2.js"></script>
 <script>
 onload = function(){
-	var dropZone = document.getElementById('uploadArea');
-	dropZone.addEventListener('dragover', handleDragOver, false);
-	dropZone.addEventListener('drop', handleFileSelect, false);
-	initCPU();
-	initView();
-	updateView();
+	var emu = new KUEChip2();
+	document.getElementById("ctrl-sp").onclick = function(){ emu.nextPhase(); emu.updateView(); };
+	document.getElementById("ctrl-si").onclick = function(){ emu.nextInstr(); emu.updateView(); };
+	document.getElementById("ctrl-ss").onclick = function(){ emu.runCPU(); };
+	document.getElementById("ctrl-rs").onclick = function(){ emu.resetCPU(); };
+	document.getElementById("ctrl-cc").onclick = function(){ emu.clearCode(); };
+	document.getElementById("ctrl-cd").onclick = function(){ emu.clearData(); };
 }
 
 </script>
@@ -52,11 +53,12 @@ onload = function(){
 <div class="container">
 	<h2>KUE-CHIP2 Emulator</h2>
 	<div class="btn-group" role="group" aria-label="controls">
-		<button type="button" class="btn btn-default" onclick="nextPhase(); updateView();">Single Phase</button>
-		<button type="button" class="btn btn-default" onclick="nextInstr(); updateView();">Single Instruction</button>
-		<button type="button" class="btn btn-default" onclick="runCPU()">Start/Stop</button>
-		<button type="button" class="btn btn-default" onclick="resetCPU()">Reset</button>
-		<button type="button" class="btn btn-default" onclick="clearData()">Clear Data Memory</button>
+		<button id="ctrl-sp" type="button" class="btn btn-default">Single Phase</button>
+		<button id="ctrl-si" type="button" class="btn btn-default">Single Instruction</button>
+		<button id="ctrl-ss" type="button" class="btn btn-default">Start/Stop</button>
+		<button id="ctrl-rs" type="button" class="btn btn-default">Reset</button>
+		<button id="ctrl-cc" type="button" class="btn btn-default">Clear Code Memory</button>
+		<button id="ctrl-cd" type="button" class="btn btn-default">Clear Data Memory</button>
 	</div>
 	<div class="row">
 		<div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
