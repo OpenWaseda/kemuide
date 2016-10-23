@@ -57,16 +57,18 @@
 		</ul>
 		<div class="tab-content">
 			<div role="tabpanel" class="tab-pane active" id="content_reassemble">
-				<table class="table table-bordered" style="margin: 1em 0">
-					<thead>
-						<th style="width: 4em;">Addr</th>
-						<th style="width: 2em;">BP</th>
-						<th>機械語</th>
-						<th>逆アセンブル</th>
-					</thead>
-					<tbody id="dasm_body">
-					</tbody>
-				</table>
+				<div style="max-height: 36em; overflow: scroll">
+					<table class="table table-bordered" style="margin: 1em 0">
+						<thead>
+							<th style="width: 4em;">Addr</th>
+							<th style="width: 2em;">BP</th>
+							<th>機械語</th>
+							<th>逆アセンブル</th>
+						</thead>
+						<tbody id="dasm_body">
+						</tbody>
+					</table>
+				</div>
 				<button type="button" class="btn btn-default" style="float: right" onclick="buttonDisassemble()">
 					<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> 再アセンブル
 				</button>
@@ -91,7 +93,7 @@
 			var memoryControl = {};
 			var core = new KemuCore();
 			var pc = 0;
-
+			var breakpoints = {};
 
 			function loadHex(s) {
 				var i = 0, n = 0;
@@ -206,10 +208,17 @@
 				}
 				$('.dasm-line').css('background-color', '');
 				$('.dasm-line-' + pc.toString()).css('background-color', '#FF6');
+				$('.break-button').css('color', 'white');
+				for (var addr in breakpoints) {
+					if (addr !== undefined) {
+						$('.break-button-' + addr.toString()).css('color', '#F33');
+					}
+				}
 			}
 
 			function disassemble() {
 				$('#dasm_body').empty();
+				breakpoints = {};
 				var res = core.disassemble();
 				var max = res.length - 1;
 				while (res[max].disassemble[0] == "NOP") max--;
@@ -222,7 +231,22 @@
 					for (var j = 0; j < res[i].binary.length; j++) {
 						text += ("0" + res[i].binary[j].toString(16).toUpperCase()).slice(-2) + "&nbsp;";
 					}
-					tr.append($('<td>'));
+					tr.append($('<td>').append($('<span>')
+								.text("●")
+								.data('addr', res[i].addr.toString())
+								.css('cursor', 'pointer')
+								.css('padding', '0.5em')
+								.addClass('break-button')
+								.addClass('break-button-' + res[i].addr.toString())
+								.click(function(){
+						var addr = parseInt($(this).data('addr'));
+						if (breakpoints[addr] != undefined) {
+							delete breakpoints[addr];
+						} else {
+							breakpoints[addr] = "";
+						}
+						updateInterface();
+					})));
 					tr.append($('<td>').html(text));
 					text = "";
 					for (var j = 0; j < cmd.length; j++) {
@@ -290,12 +314,12 @@
 					runningTimer = setTimeout(function runningTimerCallback(){
 						core.runSinglePhase();
 						if (core.reg["PHASE"] == 0) pc = core.reg["PC"];
-						updateInterface(true);
-						if (core.halted) {
+						if (core.halted || (core.reg["PHASE"] == 0 && breakpoints[pc] != undefined)) {
 							runningTimer = null;
 						} else {
 							runningTimer = setTimeout(runningTimerCallback, runningTimerInterval);
 						}
+						updateInterface(true);
 					}, runningTimerInterval);
 				}
 			}
