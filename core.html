@@ -184,7 +184,10 @@
 			function disassemble() {
 				$('#dasm_body').empty();
 				var res = core.disassemble();
-				for (var i = 0; i < res.length; i++) {
+				var max = res.length - 1;
+				while (res[max].disassemble[0] == "NOP") max--;
+				if (max == 0) max = 1;
+				for (var i = 0; i <= max; i++) {
 					var text = "", cmd = res[i].disassemble;
 					var count = 0;
 					var tr = $('<tr>');
@@ -216,8 +219,8 @@
 							}
 							count += cmd[j].length;
 						}
-						if (typeof cmd[1] != "number" && (j == 0 || cmd[j] == ",")) {
-							while (count % 8 == 0) text += '&nbsp;', count++;
+						if (((typeof cmd[0]) != "number") && (j == 0 || cmd[j] == ",")) {
+							while (count % 8 != 0) text += '&nbsp;', count++;
 						}
 					}
 					tr.append($('<td>').html(text));
