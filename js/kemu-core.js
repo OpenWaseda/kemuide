@@ -10,6 +10,9 @@
 			"FLAG"	: 0, "ACC"	: 0, "IX"	: 0, "PC"	: 0, "IR"	: 0,
 			"MAR"	: 0, "IBUF"	: 0, "OBUF"	: 0, "PHASE": 0
 		};
+		this.flag = {
+			"IBUF": false, "OBUF": false
+		};
 		this.constructor();
 		this.reset();
 	};
@@ -23,6 +26,8 @@
 			for (var k in this.reg) {
 				if (k) this.reg[k] = 0;
 			}
+			this.flag["IBUF"] = false;
+			this.flag["OBUF"] = false;
 		},
 		disassemble: function() {
 			var index = 0;
@@ -87,148 +92,139 @@
 			}
 			return res;
 		},
-		// runSinglePhase: function(){
-		// 	var code = this.regIR >> 4, a = (this.regIR >> 3) & 1,
-		// 	    b = this.regIR & 7;	
-		// 	if (this.phase == 0) {
-		// 		this.regMAR = this.regPC++;
-		// 	} else if (this.phase == 1) {
-		// 		this.regIR = this.memory[this.regMAR];
-		// 	} else if (code >= 8 && (phase == 2 && b <= 1 || 
-		// 		phase == 3 && (b == 2 || b == 3) || phase == 4 && b >= 4)) {	// calculate
-		// 		var val1 = a ? this.regIX : this.regACC, val2;
-		// 		if (phase == 3) val2 = b ? this.regIX : this.regACC;
-		// 		else val2 = this.memory[this.regMAR];
-		// 		var cf = (this.regFLAG & 8) ? 1 : 0;	// CF
-		// 		if      (code == 11) val1 += val2;		// ADD
-		// 		else if (code ==  9) val1 += val2 + cf;	// ADC
-		// 		else if (code == 10) val1 -= val2;		// SUB
-		// 		else if (code ==  8) val1 -= val2 + cf;	// SBC
-		// 		else if (code == 15) val1 -= val2;		// CMP
-		// 		else if (code == 14) val1 &= val2;		// AND
-		// 		else if (code == 13) val1 |= val2;		// OR
-		// 		else if (code == 12) val1 ^= val2;		// EOR
-		// 		// set flags
-		// 		if (code == 9 || code == 8)		// SBC, ABC
-		// 			this.regFLAG = (this.regFLAG & ~8) + 8 * ((0 <= val1 < 0x100) ? 0 : 1); // set CF
-		// 		if (val1 < 0) val1 = 0;
-		// 		this.regFLAG = (this.regFLAG & ~4);	// clear VF
-		// 		if (12 <= code && code <= 14)	// EOR OR AND
-		// 			/* set vf */;
-		// 		this.regFLAG = (this.regFLAG & ~2) + 2 * ((var1 & 128) >> 7);	// set NF
-		// 		this.regFLAG = (this.regFLAG & ~1) + (var1 ? 0 : 1);	// set ZF
-		// 		// write back to register
-		// 		var1 &= 0xFF;
-		// 		if (code != 15) {	// !CMP
-		// 			if (a) this.regIX  = val1;
-		// 			else   this.regACC = val1;
-		// 		}
-		// 		this.phase = -1;
-		// 	} else if (this.phase == 2) {
-		// 		if ((code >= 6 && b >= 2) || code == 3) {		// LD, ST, Bcc, calculate && b = d [d] (d) [IX+d] (IX+d)
-		// 			this.regMAR = this.regPC++;
-		// 		} else if (code == 6 && b <= 1) {	// LD (ACC | IX)
-		// 			var val = b ? this.regIX : this.regACC;
-		// 			if (a) this.regIX  = val;
-		// 			else   this.regACC = val;
-		// 			this.phase = -1;
-		// 		} else if (code == 4) {		// Ssm, Rsm
-		// 			var val = a ? this.regIX : this.regACC;
-		// 			var cf = (this.regFLAG & 8) ? 1 : 0;	// CF
-		// 			var vf = 0, nf, zf;
-		// 			if (b == 0 || b == 2) {	// SRA, SRL
-		// 				cf = val & 1;
-		// 				val >>= 1;
-		// 				val &= 127;
-		// 				if (b == 0) val += (val & 64) * 2;
-		// 			} else if (b == 1 || b == 3) {	// SLA, SLL
-		// 				cf = (val & 128) ? 1 : 0;
-		// 				val <<= 1;
-		// 			} else if (b == 4 || b == 6) {	// RRA, RRL
-		// 				val += 256 * (b == 4 ? cf : (val & 1));
-		// 				cf = val & 1;
-		// 				val >>= 1;
-		// 			} else {	// RLA, RLL
-		// 				val <<= 1;
-		// 				val += b == 5 ? cf : ((val & 256) >> 8);
-		// 				cf = !!(val & 256);
-		// 			}
-		// 			val &= 0xFF;
-		// 			if (b == 1 || b == 5) vf = cf;
-		// 			nf = (val & 128) ? 1 : 0;
-		// 			zf = val ? 0 : 1;
-		// 			this.regFLAG = cf * 8 + vf * 4 + nf * 2 + zf;
-		// 			if (a) this.regIX  = val;
-		// 			else   this.regACC = val;
-		// 			this.phase = -1;
-		// 		} else if (code == 2) {		// RCF, SCF
-		// 			this.regFLAG = (this.regFLAG & ~8) + 8 * a;
-		// 			this.phase = -1;
-		// 		} else if (coe == 0) {		// NOP, HLT
-		// 			if (a) this.halted = 1;
-		// 			this.phase = -1;
-		// 		} else if (code == 1) {		// OUT, IN
-		// 			if (a) {
-		// 				this.regACC  = this.regIBUF;
-		// 				this.flgIBUF = 0;
-		// 				if (this.connected != null) this.connected.flgOBUF = 0;
-		// 			} else {
-		// 			 	this.regOBUF = this.regACC;
-		// 				this.flgOBUF = 1;
-		// 				if (this.connected != null) this.connected.flgIBUF = 1;
-		// 			}
-		// 			this.phase = -1;
-		// 		}
-		// 	} else if (this.phase == 3) {
-		// 		if (code == 6 && (b == 2 || b == 3)) {	// LD-d
-		// 			if (a) this.regIX  = this.memory[this.regMAR];
-		// 			else   this.regACC = this.memory[this.regMAR];
-		// 			this.phase = -1;
-		// 		} else if (code >= 6 && b >= 4) {	// LD, ST, calcuate [d](d)[IX+d](IX+d)
-		// 			if (b <= 5) this.regMAR = this.memory[this.regMAR];
-		// 			else this.regMAR = this.regIX + this.memory[this.regMAR];
-		// 			this.regMAR &= 0xFF;
-		// 		} else if (code == 3) {
-		// 			var res = 0, cond = this.regIR & 15;
-		// 			var cf = (this.regFLAG & 8) >> 3, vf = (this.regFLAG & 4) >> 2,
-		// 				nf = (this.regFLAG & 2) >> 1, zf = (this.regFLAG & 1);
-		// 			if      (cond == 0) res = 1;
-		// 			else if (cond == 8) res = vf;		// VF=1
-		// 			else if (cond == 1) res = 1 - zf;	// ZF=0
-		// 			else if (cond == 9) res = zf;		// ZF=1
-		// 			else if (cond == 2) res = 1 - nf;	// NF=0
-		// 			else if (cond ==10) res = nf;		// NF=1
-		// 			else if (cond == 3) res = nf || zf ? 0 : 1;	// NF || ZF=0
-		// 			else if (cond ==11) res = nf || zf ? 1 : 0;	// NF || ZF=1
-		// 			else if (cond == 4) res = this.flgIBUF ? 0 : 1;			// OnNoInput
-		// 			else if (cond ==12) res = this.flgOBUF ? 1 : 0;			// OnNoOutput
-		// 			else if (cond == 5) res = 1 - cf;	// CF=0
-		// 			else if (cond ==13) res = cf;		// CF=1
-		// 			else if (cond == 6) res = (vf + nf) && vf * nf == 0 ? 0 : 1;
-		// 			else if (cond ==14) res = (vf + nf) && vf * nf == 0 ? 1 : 0;
-		// 			else if (cond == 7) res = ((vf + nf) && vf * nf == 0) || zf ? 0 : 1;
-		// 			else if (cond ==15) res = ((vf + nf) && vf * nf == 0) || zf ? 1 : 0;
-		// 			if (res) this.regPC = this.memory[this.regMAR];
-		// 			this.phase = -1;
-		// 		}
-		// 	} else if (this.phase == 4) {
-		// 		if (code == 6) {	// LD
-		// 			if (a) this.regIX  = this.memory[this.regMAR];
-		// 			else   this.regACC = this.memory[this.regMAR];
-		// 		} else if (code == 7) {	// ST
-		// 			this.memory[this.regMAR] = a ? this.regIX : this.regACC;
-		// 		}
-		// 		this.phase = -1;
-		// 	}
-		// 	this.phase++;
-		// },
-		// runSingleInstruction: function(){
-		// 	if (!this.halted) {
-		// 		do {
-		// 			this.runSinglePhase();
-		// 		} while (this.phase == 0);
-		// 	}
-		// }
+		runSinglePhase: function(){
+			if (this.halted) return;
+			var p = this.reg["PHASE"]++;
+			if      (p == 0) this.reg["MAR"] = this.reg["PC"]++;
+			else if (p == 1) this.reg["IR"] = this.memory[this.reg["MAR"]];
+			else {
+				var ir = this.reg["IR"];
+				var opecode = ir >> 4;
+				var cc = ir & 0xF;
+				var a = (cc & 8) > 0 ? 1 : 0;
+				var sm = cc & 3;
+				var b = cc & 7;
+				if (opecode == 0) {		// HLT, NOP
+					if (a > 0) this.halted = true;
+				} else if (opecode == 1) {	// OUT, IN
+					if (a == 0) {	// OUT
+						this.reg["OBUF"] = this.reg["ACC"];
+						this.flag["OBUF"] = true;
+					} else {
+						this.reg["ACC"] = this.reg["IBUF"];
+						this.flag["IBUF"] = false;
+					}
+				} else if (opecode == 2) {	// RCF, SCF
+					this.reg["FLAG"] = (this.reg["FLAG"] & ~8) + a;
+				} else if (opecode == 3) {	// Bcc
+					if (p == 2) {
+						this.reg["MAR"] = this.reg["PC"]++;
+						return;
+					} else {
+						var flag = this.reg["FLAG"];
+						var cf = (flag & 8) > 0 ? true : false;
+						var vf = (flag & 4) > 0 ? true : false;
+						var nf = (flag & 2) > 0 ? true : false;
+						var zf = (flag & 1) > 0 ? true : false;
+						var branch = false;
+						if      (cc ==  0) branch = true;		// BA
+						else if (cc ==  1) branch = !zf;		// BNZ
+						else if (cc ==  2) branch = !nf;		// BZP
+						else if (cc ==  3) branch = !nf && !zf;	// BP
+						else if (cc ==  4) branch = !this.flag["IBUF"];	// BNI
+						else if (cc ==  5) branch = !cf;		// BNC
+						else if (cc ==  6) branch = vf == nf;	// BGE
+						else if (cc ==  7) branch = vf == nf && !zf;	// BGT
+						else if (cc ==  8) branch = vf;			// BVF
+						else if (cc ==  9) branch = zf;			// BZ
+						else if (cc == 10) branch = nf;			// BN
+						else if (cc == 11) branch = zf || nf;	// BZN
+						else if (cc == 12) branch = this.flag["OBUF"];	// BNO
+						else if (cc == 13) branch = cf;			// BC
+						else if (cc == 14) branch = vf == nf;	// BLT
+						else if (cc == 15) branch = vf == nf || nf;	// BLE
+						if (branch) this.reg["PC"] = this.memory[this.reg["MAR"]];
+					}
+				} else if (opecode == 4) {	// Ssm, Rsm
+					var flag = this.reg["FLAG"];
+					var cf = (flag & 8) > 0 ? true : false;
+					var vf = (flag & 4) > 0 ? true : false;
+					var nf = (flag & 2) > 0 ? true : false;
+					var zf = (flag & 1) > 0 ? true : false;
+					var val = a == 0 ? this.reg["ACC"] : this.reg["IX"];
+					var cf2 = (sm & 1) == 0 ? (val & 1) > 0 : (val & 128) > 0;
+					if ((sm & 1) == 0) val >>= 1;
+					else val <<= 1;
+					if (sm == 0) val = (val & 0x7F) + ((val & 64) > 0 ? 128 : 0);
+					else if (sm == 2) sm &= 0x7F;
+					else if (sm == 4) val = (val & 0x7F) + (cf ? 128 : 0);
+					else if (sm == 5) val = (val & 0xFE) + (cf ? 1 : 0);
+					else if (sm == 6) val = (val & 0x7E) + (cf2 ? 128 : 0);
+					else if (sm == 7) val = (val & 0xFE) + (cf2 ? 1 : 0);
+					this.reg["FLAG"] = (cf2 ? 8 : 0) + (vf ? 4 : 0) + (nf ? 2 : 0) + (zf ? 1 : 0);
+				} else if (opecode >= 6) {
+					if (b >= 2) {
+						if (p == 2) {
+							this.reg["MAR"] = this.reg["PC"]++;
+							return;
+						} else if (p == 3 && b >= 4) {
+							var d = this.memory[this.reg["MAR"]];
+							if ((b & 1) > 0) d += 0x100;
+							if ((b & 2) > 0) d += this.reg["IX"];
+							this.reg["MAR"] = d;
+							return;
+						}
+					}
+					if (opecode == 6) {
+						var val = b < 2 ? ((b & 1) > 0 ? this.reg["IX"] : this.reg["ACC"]) :
+							this.memory[this.reg["MAR"]];
+						if (a == 0) this.reg["ACC"] = val;
+						else        this.reg["IX"]  = val;
+					} else if (opecode == 7) {
+						var val = a > 0 ? this.reg["IX"] : this.reg["ACC"];
+						this.memory[this.reg["MAR"]] = val;
+					} else {
+						var flag = this.reg["FLAG"];
+						var cf = (flag & 8) > 0 ? true : false;
+						var vf = (flag & 4) > 0 ? true : false;
+						var nf = (flag & 2) > 0 ? true : false;
+						var zf = (flag & 1) > 0 ? true : false;
+						var val = 0, val1 = a == 0 ? this.reg["ACC"] : this.reg["IX"], val2;
+						if (b < 2) val2 = b == 0 ? this.reg["ACC"] : this.reg["IX"];
+						else val2 = this.memory[this.reg["MAR"]];
+						if      (opecode ==  8) val = val1 - val2 - (cf ? 1 : 0);
+						else if (opecode ==  9) val = val1 + val2 + (cf ? 1 : 0);
+						else if (opecode == 10) val = val1 - val2;
+						else if (opecode == 11) val = val1 + val2;
+						else if (opecode == 12) val = val1 ^ val2;
+						else if (opecode == 13) val = val1 | val2;
+						else if (opecode == 14) val = val1 & val2;
+						else if (opecode == 15) val = val1 - val2;
+						if (opecode == 8 || opecode == 9) {	// SBC, ADC
+							cf = (val & ~0xFF) > 0
+						}
+						if (12 <= opecode && opecode <= 14) vf = false;
+						else vf = (val1 & 128) != (val & 128);
+						nf = ((val & 128) > 0);
+						zf = val == 0;
+						this.reg["FLAG"] = (cf ? 8 : 0) + (vf ? 4 : 0) + (nf ? 2 : 0) + (zf ? 1 : 0);
+						if (opecode != 15) {	// !CMP
+							val = val & 0xFF;
+							if (a == 0) this.reg["ACC"] = val;
+							else        this.reg["IX"]  = val;
+						}
+					}
+				}
+				this.reg["PHASE"] = 0;
+			}
+		},
+		runSingleInstruction: function(){
+			if (!this.halted) {
+				do {
+					this.runSinglePhase();
+				} while (this.reg["PHASE"] != 0);
+			}
+		}
 	};
 
 	window['KemuCore'] = kemuCore;

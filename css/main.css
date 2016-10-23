@@ -79,4 +79,8 @@ a[role=menuitem] {
 	width: 100%;
 }
 
+input.warning {
+	background-color: #f99;
+}
+
 
