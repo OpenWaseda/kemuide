@@ -54,6 +54,10 @@
 				<a id="tab_memory" href="#content_user"
 					aria-controls="content_user" role="tab" data-toggle="tab">ユーザーメモリ</a>
 			</li>
+			<li role="presentation">
+				<a id="tab_memory" href="#content_trace"
+					aria-controls="content_trace" role="tab" data-toggle="tab">トレース</a>
+			</li>
 		</ul>
 		<div class="tab-content">
 			<div role="tabpanel" class="tab-pane active" id="content_reassemble">
@@ -77,6 +81,30 @@
 			</div>
 			<div role="tabpanel" class="tab-pane" id="content_user">
 			</div>
+			<div role="tabpanel" class="tab-pane" id="content_trace">
+				<table class="table table-bordered" style="margin: 1em 0 0 0; table-layout: fixed">
+					<thead>
+						<th>Addr</th>
+						<th>Phase</th>
+						<th>PC</th>
+						<th>FRAG</th>
+						<th>ACC</th>
+						<th>IX</th>
+						<th>MAR</th>
+						<th>IR</th>
+					</thead>
+				</table>
+				<div id="trace_area" style="max-height: 36em; overflow: scroll; margin: 0; padding: 0">
+					<table class="table table-bordered" style="margin: 0; table-layout: fixed">
+						<tbody id="trace_body">
+						</tbody>
+					</table>
+				</div>
+				<label style="display: block; padding: 0.5em; float: left; width: 24em;"><input type="checkbox" id="trace_enabled">トレースを有効にする</label>
+				<button type="button" class="btn btn-default" style="float: right" onclick="buttonTraceClear()">
+					<span class="glyphicon glyphicon-trash" aria-hidden="true"></span> クリア
+				</button>
+			</div>
 		</div>
 
 		<script src="js/jquery.min.js"></script>
@@ -94,6 +122,7 @@
 			var core = new KemuCore();
 			var pc = 0;
 			var breakpoints = {};
+			var traceEnabled = false;
 
 			function loadHex(s) {
 				var i = 0, n = 0;
@@ -297,7 +326,39 @@
 				initializeInterface();
 				disassemble();
 				updateInterface();
+
+				$('#trace_enabled').change(function(){
+					traceEnabled = $('#trace_enabled').prop('checked') ? true : false;
+				});
 			});
+
+			function runPhase() {
+				if (core.halted) return;
+				var p = core.reg["PHASE"];
+				core.runSinglePhase();
+				if (traceEnabled) {
+					var tr = $('<tr>')
+						.append($('<td>').text(("0" + pc.toString(16)).slice(-2).toUpperCase()))
+						.append($('<td>').text(p))
+						.append($('<td>').text(("0" + core.reg["PC"].toString(16)).slice(-2).toUpperCase()))
+						.append($('<td>').text(("0" + core.reg["FLAG"].toString(16)).slice(-2).toUpperCase()))
+						.append($('<td>').text(("0" + core.reg["ACC"].toString(16)).slice(-2).toUpperCase()))
+						.append($('<td>').text(("0" + core.reg["IX"].toString(16)).slice(-2).toUpperCase()))
+						.append($('<td>').text(("0" + core.reg["MAR"].toString(16)).slice(-2).toUpperCase()))
+						.append($('<td>').text(("0" + core.reg["IR"].toString(16)).slice(-2).toUpperCase()));
+					$('#trace_body').append(tr);
+					$('#trace_area').scrollTop(document.getElementById('trace_area').scrollHeight);
+				}
+				if (core.reg["PHASE"] == 0) pc = core.reg["PC"];
+			}
+
+			function runInstruction() {
+				if (core.halted) return;
+				do {
+					runPhase();
+				} while (core.reg["PHASE"] != 0);
+				pc = core.reg["PC"];
+			}
 
 			function buttonOpenFile() {
 				$("#droparea").toggle();
@@ -326,16 +387,14 @@
 
 			function buttonStep() {
 				if (runningTimer != null) return false;
-				core.runSingleInstruction();
-				if (core.reg["PHASE"] == 0) pc = core.reg["PC"];
+				runInstruction();
 				updateInterface(true);
 				return false;
 			}
 
 			function buttonPhase() {
 				if (runningTimer != null) return false;
-				core.runSinglePhase();
-				if (core.reg["PHASE"] == 0) pc = core.reg["PC"];
+				runPhase();
 				updateInterface(true);
 				return false;
 			}
@@ -359,6 +418,10 @@
 				disassemble();
 				updateInterface();
 				return false;
+			}
+
+			function buttonTraceClear() {
+				$('#trace_body').empty();
 			}
 		</script>
 	</body>
