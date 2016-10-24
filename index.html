@@ -41,18 +41,7 @@
 			</button>
 		</div>
 		<div id="droparea">Drag and drop here</div>
-		<div id="editor">
-N:      EQU     80H
-SUM:    EQU     81H
-        LD      IX,     [N]
-        LD      ACC,    0
-LOOP:   ADD     ACC,    IX
-        SUB     IX,     1
-        BP      LOOP
-        ST      ACC,    [SUM]
-        HLT
-        END
-</div>
+		<div id="editor"></div>
 		<h2>出力</h2>
 		<div id="output"></div>
 		<button type="button" class="btn btn-default" style="float: right" onclick="buttonClearOutput()">
@@ -73,6 +62,20 @@ LOOP:   ADD     ACC,    IX
 				editor.setOption("maxLines", 40);
 
 				editor.on('change', function(e){ textModified = true; });
+
+				s = "N:      EQU     80H\n" +
+					"SUM:    EQU     81H\n" +
+					"        LD      IX,     [N]\n" +
+					"        LD      ACC,    0\n" +
+					"LOOP:   ADD     ACC,    IX\n" +
+					"        SUB     IX,     1\n" +
+					"        BP      LOOP\n" +
+					"        ST      ACC,    [SUM]\n" +
+					"        HLT\n" +
+					"        END\n";
+				editor.setValue(s);
+				editor.clearSelection();
+				editor.focus();
 
 				$(window).on('beforeunload', function(){
 					if (textModified && editor.getValue() != '') return "変更が破棄されます。よろしいですか?";
