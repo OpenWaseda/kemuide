@@ -183,6 +183,9 @@
 								a.splice(0, 3);
 
 							}
+							if (code == 0x70 && op_b < 4) {	// ST with second operand ACC, IX, d
+								throw new KasmException("ST命令の第2引数にACC, IX, 定数は使用できません。");
+							}
 							code += ((op_a << 3) + op_b);
 							this.binary[addr++] = code;
 							if (val != -1) {
