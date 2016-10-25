@@ -118,25 +118,31 @@
 				<h2>別のKUE-CHIP2と接続する</h2>
 				<p>
 				現在実行中のKUE-CHIP2のOBUFを、他の実行中のKUE-CHIP2のIBUFに接続することが出来ます。<br>
-				接続を行うには、同じWebブラウザ上で新しいKUE-CHIP2インスタンスを起動してください。
+				接続を行うには、同じWebブラウザ上で新しいKUE-CHIP2インスタンスを起動してください。<br>
+				Chromeの場合、バックグラウンドタブではプログラムの動作が極端に遅くなります。
+				接続するKUE-CHIP2は別ウィンドウで開き、常に表示された状態にしておくことをおすすめします。
 				</p>
 				<div class="btn-group" role="group">
 					<button type="button" class="btn btn-default" onclick="window.open('index.html', '_blank')">
 						<span class="glyphicon glyphicon-file" aria-hidden="true"></span> 新しいKEMU-IDEを開く
 					</button>
-				</div><br>
-				このKUE-CHIP2の名前: <span id="io_name" class="font-weight: bold"></span><br>
-				接続先のKUE-CHIP2: <span id="io_connected_name" class="font-weight: bold"></span>
+				</div>
+				<h3>現在の接続状態</h3>
+				<table class="table table-bordered" style="table-layout: fixed;">
+					<thead>
+						<th></th>
+						<th>ポート名</th>
+						<th>名前</th>
+					</thead>
+					<tbody>
+						<tr><td>このKUE-CHIP2</td><td>OUT</td><td><span id="io_name"></span></td></tr>
+						<tr><td>接続先のKUE-CHIP2</td><td>IN</td><td><span id="io_connected_name">接続していません</span></td></tr>
+					</tbody>
+				</table>
+				<h3>接続可能なKUE-CHIP2</h3>
 				<div id="io_connect_list" class="list-group">
 					<div class="list-group-item">接続可能なKUE-CHIP2はありません</div>
 				</div>
-
-				<div class="btn-group" role="group">
-					<button type="button" class="btn btn-default" onclick="buttonUpdateList()">
-						<span class="glyphicon glyphicon-refresh" aria-hidden="true"></span> リストの更新
-					</button>
-				</div>
-				
 			</div>
 		</div>
 
@@ -396,6 +402,42 @@
 				}
 			}
 
+			function updateCoreList() {
+				$('#io_connect_list').empty();
+				var count = 0, enabled = false;
+				for (var key in localStorage) {
+					var rex = key.match(/^KEMU-(.*)$/);
+					if (rex) {
+						var name = rex[1];
+						if (name == kemuName) continue;
+						if (+new Date() - JSON.parse(localStorage["KEMU-" + name]).timestamp > 1800) {
+							delete localStorage["KEMU-" + name];
+							continue;
+						}
+						if (name == connectedName) enabled = true;
+						var div = $('<div>').addClass('list-group-item').text(name).click(function(){
+							connectedName = $(this).text();
+							$('#io_connected_name').text(connectedName);
+						});
+						$('#io_connect_list').append(div);
+						count++;
+					}
+				}
+				if (enabled == false && connectedName != null) {
+					connectedName = null;
+					$('#io_connected_name').text("接続していません");
+					$('#infobox_text').text("接続先のKUE-CHIP2との通信が途絶えました");
+				}
+				if (count == 0) {
+						$('#io_connect_list').append($('<div>').addClass('list-group-item').text("現在接続可能なKUE-CHIP2はありません"));
+				} else {
+					$('#io_connect_list').append($('<div>').addClass('list-group-item').text("接続を解除").click(function(){
+						connectedName = null;
+						$('#io_connected_name').text("接続していません");
+					}));
+				}
+			}
+
 			$(function(){
 				// Drag and Drop
 				var cancelEvent = function(e){
@@ -422,7 +464,7 @@
 				});
 
 				$('#io_name').text(kemuName);
-				buttonUpdateList();
+				updateCoreList();
 
 				core.ioPostHandler();
 				connectTimer = setTimeout(function connectTimerFunction(){
@@ -431,8 +473,9 @@
 						obj.timestamp = +new Date();
 						localStorage["KEMU-" + kemuName] = JSON.stringify(obj);
 					}
-					connectedTimer = setTimeout(connectTimerFunction, 1000);
-				}, 1000);
+					updateCoreList();
+					connectedTimer = setTimeout(connectTimerFunction, 600);
+				}, 600);
 			});
 			function runPhase() {
 				if (core.halted) return;
@@ -542,30 +585,6 @@
 				$('#trace_body').empty();
 			}
 
-			function buttonUpdateList() {
-				$('#io_connect_list').empty();
-				var count = 0;
-				for (var key in localStorage) {
-					var rex = key.match(/^KEMU-(.*)$/);
-					if (rex) {
-						var name = rex[1];
-						if (name == kemuName) continue;
-						if (+new Date() - JSON.parse(localStorage["KEMU-" + name]).timestamp > 50000) {
-							delete localStorage["KEMU-" + name];
-							continue;
-						}
-						var div = $('<div>').addClass('list-group-item').text(name).click(function(){
-							connectedName = $(this).text();
-							$('#io_connected_name').text(connectedName);
-						});
-						$('#io_connect_list').append(div);
-					}
-					count++;
-				}
-				if (count == 0) {
-						$('#io_connect_list').append($('<div>').addClass('list-group-item').text("接続可能なKUE-CHIP2はありません"));
-				}
-			}
 		</script>
 	</body>
 </html>
