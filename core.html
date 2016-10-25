@@ -451,6 +451,10 @@
 			}
 
 			function buttonReset() {
+				if (runningTimer != null) {
+					clearTimeout(runningTimer);
+					runningTimer = null;
+				}
 				core.reset();
 				pc = 0;
 				updateInterface(false);
