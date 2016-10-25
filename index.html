@@ -76,6 +76,7 @@
 				editor.setValue(s);
 				editor.clearSelection();
 				editor.focus();
+				textModified = false;
 
 				$(window).on('beforeunload', function(){
 					if (textModified && editor.getValue() != '') return "変更が破棄されます。よろしいですか?";

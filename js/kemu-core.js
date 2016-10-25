@@ -13,6 +13,8 @@
 		this.flag = {
 			"IBUF": false, "OBUF": false
 		};
+		this.ioPreHandler = null;
+		this.ioPostHandler = null;
 		this.constructor();
 		this.reset();
 	};
@@ -107,6 +109,7 @@
 				if (opecode == 0) {		// HLT, NOP
 					if (a > 0) this.halted = true;
 				} else if (opecode == 1) {	// OUT, IN
+					if (this.ioPreHandler) this.ioPreHandler();
 					if (a == 0) {	// OUT
 						this.reg["OBUF"] = this.reg["ACC"];
 						this.flag["OBUF"] = true;
@@ -114,6 +117,7 @@
 						this.reg["ACC"] = this.reg["IBUF"];
 						this.flag["IBUF"] = false;
 					}
+					if (this.ioPostHandler) this.ioPostHandler();
 				} else if (opecode == 2) {	// RCF, SCF
 					this.reg["FLAG"] = (this.reg["FLAG"] & ~8) + a;
 				} else if (opecode == 3) {	// Bcc
@@ -121,6 +125,9 @@
 						this.reg["MAR"] = this.reg["PC"]++;
 						return;
 					} else {
+						if (cc == 4 || cc == 12) {
+							if (this.ioPreHandler) this.ioPreHandler();
+						}
 						var flag = this.reg["FLAG"];
 						var cf = (flag & 8) > 0 ? true : false;
 						var vf = (flag & 4) > 0 ? true : false;

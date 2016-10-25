@@ -158,6 +158,39 @@
 			var traceEnabled = false;
 			var kemuName = Math.random().toString(36).slice(-8);
 			var connectedName = null;
+			var connectTimer = null;
+
+			core.ioPreHandler = function(){
+				var me = JSON.parse(localStorage["KEMU-" + kemuName]);
+				core.flag["IBUF"] = me.iflag || 0;
+				core.reg["IBUF"] = me.ibuf || false;
+				if (!connectedName) return;
+				var target = JSON.parse(localStorage["KEMU-" + connectedName]);
+				if (!target) return;
+				core.flag["OBUF"] = !!target.iflag;
+			};
+
+			core.ioPostHandler = function(){
+				var obj = {
+					timestamp: +new Date(),
+					obuf: core.reg["OBUF"],
+					ibuf: core.reg["IBUF"],
+					oflag: core.flag["OBUF"],
+					iflag: core.flag["IBUF"]
+				};
+				localStorage["KEMU-" + kemuName] = JSON.stringify(obj);
+				if (connectedName) {
+					obj = JSON.parse(localStorage["KEMU-" + connectedName]);
+					if (obj.iflag != core.flag["OBUF"] || obj.ibuf == core.reg["OBUF"]) {
+						obj.iflag = core.flag["OBUF"];
+						obj.ibuf = core.reg["OBUF"];
+						localStorage["KEMU-" + connectedName] = JSON.stringify(obj);
+					}
+				}
+			};
+
+			function connectCore(core) {
+			}
 
 			function loadHex(s) {
 				var i = 0, n = 0;
@@ -390,6 +423,16 @@
 
 				$('#io_name').text(kemuName);
 				buttonUpdateList();
+
+				core.ioPostHandler();
+				connectTimer = setTimeout(function connectTimerFunction(){
+					if (localStorage["KEMU-" + kemuName]) {
+						var obj = JSON.parse(localStorage["KEMU-" + kemuName]);
+						obj.timestamp = +new Date();
+						localStorage["KEMU-" + kemuName] = JSON.stringify(obj);
+					}
+					connectedTimer = setTimeout(connectTimerFunction, 1000);
+				}, 1000);
 			});
 			function runPhase() {
 				if (core.halted) return;
@@ -434,7 +477,7 @@
 					runningTimer = null;
 				} else {
 					runningStart = +new Date();
-					var timerCount = 0, timerTime;
+					var timerCount = 0, timerTime, lastUpdatedTime = runningStart;
 					runningTimer = setTimeout(function runningTimerCallback(){
 						timerTime = +new Date();
 						core.runSinglePhase();
@@ -445,9 +488,12 @@
 							updateInterface(true);
 							return;
 						} else {
+							if (timerTime - lastUpdatedTime > 50) {
+								updateInterface(true);
+								lastUpdatedTime = timerTime;
+							}
 							runningTimer = setTimeout(runningTimerCallback, Math.max(0, runningTimerInterval - (+new Date() - timerTime)));
 						}
-						if (runningTimerInterval > 0 || timerCount % 10 == 9) updateInterface(true);
 						timerCount++;
 					}, 0);
 				}
@@ -504,12 +550,17 @@
 					if (rex) {
 						var name = rex[1];
 						if (name == kemuName) continue;
+						if (+new Date() - JSON.parse(localStorage["KEMU-" + name]).timestamp > 50000) {
+							delete localStorage["KEMU-" + name];
+							continue;
+						}
 						var div = $('<div>').addClass('list-group-item').text(name).click(function(){
-							connectedName = name;
-							$('#io_connected_name').text(name);
+							connectedName = $(this).text();
+							$('#io_connected_name').text(connectedName);
 						});
 						$('#io_connect_list').append(div);
 					}
+					count++;
 				}
 				if (count == 0) {
 						$('#io_connect_list').append($('<div>').addClass('list-group-item').text("接続可能なKUE-CHIP2はありません"));
