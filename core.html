@@ -258,6 +258,8 @@
 			function updateInterface(anim) {
 				var message = "";
 				$('.warning').removeClass('warning');
+				if (core.flag["IBUF"]) message += "IFLAGがオンです\n";
+				if (core.flag["OBUF"]) message += "OFLAGがオンです\n";
 				for (var key in core.reg) {
 					if (!key) continue;
 					var s = ("0" + core.reg[key].toString(16)).toUpperCase().slice(-2);
