@@ -256,6 +256,7 @@
 			}
 
 			function updateInterface(anim) {
+				var message = "";
 				$('.warning').removeClass('warning');
 				for (var key in core.reg) {
 					if (!key) continue;
@@ -265,10 +266,14 @@
 					statusControl[key].val(s);
 				}
 				for (var i = 0; i < 0x200; i++) {
-					var s = ('0' + core.memory[i].toString(16).toUpperCase()).slice(-2);
-					if (anim && s != memoryControl[i].val()) 
-						memoryControl[i].addClass('warning');
-					memoryControl[i].val(s);
+					var data1 = ('0' + core.memory[i].toString(16).toUpperCase()).slice(-2);
+					var data0 = memoryControl[i].val();
+					if (data0 != data1) {
+						if (anim) memoryControl[i].addClass('warning');
+						memoryControl[i].val(data1);
+						if (anim && data0 != "") message += "メモリの" + ("00" + i.toString(16).toUpperCase()).split(-3) + "H番地が" + 
+							data0 + "Hから" + data1 + "Hに書き換わりました\n";
+					}
 				}
 				$('.dasm-line').css('background-color', '');
 				$('.dasm-line-' + pc.toString()).css('background-color', '#FF6');
@@ -278,14 +283,13 @@
 						$('.break-button-' + addr.toString()).css('color', '#F33');
 					}
 				}
-				var s = "";
 				if (core.halted) {
-					s = "プログラムの実行が停止しました。初期状態に戻すには「リセット」を選択してください。";;
+					message += "プログラムの実行が停止しました。初期状態に戻すには「リセット」を選択してください。";;
 				} else if (pc == 0){
-					if (traceEnabled) s = "トレース実行するには、「ステップ実行」または「フェーズ実行」を選択してください";
-					else s = "実行するには、「実行/停止」もしくは「ステップ実行」、「フェーズ実行」を選択してください";
+					if (traceEnabled) message += "トレース実行するには、「ステップ実行」または「フェーズ実行」を選択してください";
+					else message += "実行するには、「実行/停止」もしくは「ステップ実行」、「フェーズ実行」を選択してください";
 				}
-				$('#infobox_text').text(s);
+				$('#infobox_text').text(message);
 			}
 
 			function disassemble() {
