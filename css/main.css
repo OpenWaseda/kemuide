@@ -83,6 +83,10 @@ input.warning {
 	background-color: #f99;
 }
 
+input.pc_active {
+	background-color: #ff9;
+}
+
 #infobox {
 	margin: 0.5em 0;
 	color: #999;

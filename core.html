@@ -258,6 +258,7 @@
 			function updateInterface(anim) {
 				var message = "";
 				$('.warning').removeClass('warning');
+				$('.pc_active').removeClass('pc_active');
 				if (core.flag["IBUF"]) message += "IFLAGがオンです\n";
 				if (core.flag["OBUF"]) message += "OFLAGがオンです\n";
 				for (var key in core.reg) {
@@ -275,6 +276,8 @@
 						memoryControl[i].val(data1);
 						if (anim && data0 != "") message += "メモリの" + ("00" + i.toString(16).toUpperCase()).split(-3) + "H番地が" + 
 							data0 + "Hから" + data1 + "Hに書き換わりました\n";
+					} else if (i < 0x100 && i == core.reg['PC']) {
+						memoryControl[i].addClass('pc_active');
 					}
 				}
 				$('.dasm-line').css('background-color', '');
@@ -285,13 +288,17 @@
 						$('.break-button-' + addr.toString()).css('color', '#F33');
 					}
 				}
+				if (runningDelta != -1) {
+					message += "プログラムの実行時間は " + runningDelta + "ミリ秒 でした\n";
+					runningDelta = -1;
+				}
 				if (core.halted) {
 					message += "プログラムの実行が停止しました。初期状態に戻すには「リセット」を選択してください。";;
 				} else if (pc == 0){
 					if (traceEnabled) message += "トレース実行するには、「ステップ実行」または「フェーズ実行」を選択してください";
 					else message += "実行するには、「実行/停止」もしくは「ステップ実行」、「フェーズ実行」を選択してください";
 				}
-				$('#infobox_text').text(message);
+				$('#infobox_text').html(message.replace(/\n/g, "<br>"));
 			}
 
 			function disassemble() {
@@ -419,21 +426,30 @@
 
 			var runningTimerInterval = 100;
 			var runningTimer = null;
+			var runningStart = -1;
+			var runningDelta = -1;
 			function buttonRunStop() {
 				if (runningTimer != null) {
 					clearTimeout(runningTimer);
 					runningTimer = null;
 				} else {
+					runningStart = +new Date();
+					var timerCount = 0, timerTime;
 					runningTimer = setTimeout(function runningTimerCallback(){
+						timerTime = +new Date();
 						core.runSinglePhase();
 						if (core.reg["PHASE"] == 0) pc = core.reg["PC"];
 						if (core.halted || (core.reg["PHASE"] == 0 && breakpoints[pc] != undefined)) {
 							runningTimer = null;
+							if (timerCount > 0) runningDelta = timerTime - runningStart;
+							updateInterface(true);
+							return;
 						} else {
-							runningTimer = setTimeout(runningTimerCallback, runningTimerInterval);
+							runningTimer = setTimeout(runningTimerCallback, Math.max(0, runningTimerInterval - (+new Date() - timerTime)));
 						}
-						updateInterface(true);
-					}, runningTimerInterval);
+						if (runningTimerInterval > 0 || timerCount % 10 == 9) updateInterface(true);
+						timerCount++;
+					}, 0);
 				}
 			}
 
