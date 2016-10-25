@@ -17,7 +17,7 @@
 				<span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span>
 			</button>
 			<ul class="dropdown-menu" role="menu">
-				<li role="presentation"><a role="menuitem" disabled="disabled">実行速度</a></li>
+				<li role="presentation"i class="disabled"><a role="menuitem" disabled="disabled">実行速度</a></li>
 				<li role="presentation"><a role="menuitem" tabindex="-1" onclick="runningTimerInterval = 0">最高</a></li>
 				<li role="presentation"><a role="menuitem" tabindex="-1" onclick="runningTimerInterval = 1">1kHz</a></li>
 				<li role="presentation"><a role="menuitem" tabindex="-1" onclick="runningTimerInterval = 2">500Hz</a></li>
@@ -39,7 +39,10 @@
 				<span class="glyphicon glyphicon-trash" aria-hidden="true"></span> メモリのクリア
 			</button>
 		</div>
-		<div id="statusbox">
+		<div id="statusbox"></div>
+		<div id="infobox">
+			<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+			<span id="infobox_text"></span>
 		</div>
 		<ul class="nav nav-tabs" role="tablist">
 			<li role="presentation" class="active">
@@ -57,6 +60,10 @@
 			<li role="presentation">
 				<a id="tab_memory" href="#content_trace"
 					aria-controls="content_trace" role="tab" data-toggle="tab">トレース</a>
+			</li>
+			<li role="presentation">
+				<a id="tab_memory" href="#content_io"
+					aria-controls="content_io" role="tab" data-toggle="tab">他のKUE-CHIP2を接続</a>
 			</li>
 		</ul>
 		<div class="tab-content">
@@ -82,6 +89,8 @@
 			<div role="tabpanel" class="tab-pane" id="content_user">
 			</div>
 			<div role="tabpanel" class="tab-pane" id="content_trace">
+				<p>「トレースを有効にする」にチェックを入れたら、「ステップ実行」または「フェーズ実行」を選択してください。<br>
+				「実行・停止」ではトレースは記録されません。</p>
 				<table class="table table-bordered" style="margin: 1em 0 0 0; table-layout: fixed">
 					<thead>
 						<th>Addr</th>
@@ -105,6 +114,30 @@
 					<span class="glyphicon glyphicon-trash" aria-hidden="true"></span> クリア
 				</button>
 			</div>
+			<div role="tabpanel" class="tab-pane" id="content_io">
+				<h2>別のKUE-CHIP2と接続する</h2>
+				<p>
+				現在実行中のKUE-CHIP2のOBUFを、他の実行中のKUE-CHIP2のIBUFに接続することが出来ます。<br>
+				接続を行うには、同じWebブラウザ上で新しいKUE-CHIP2インスタンスを起動してください。
+				</p>
+				<div class="btn-group" role="group">
+					<button type="button" class="btn btn-default" onclick="window.open('index.html', '_blank')">
+						<span class="glyphicon glyphicon-file" aria-hidden="true"></span> 新しいKEMU-IDEを開く
+					</button>
+				</div><br>
+				このKUE-CHIP2の名前: <span id="io_name" class="font-weight: bold"></span><br>
+				接続先のKUE-CHIP2: <span id="io_connected_name" class="font-weight: bold"></span>
+				<div id="io_connect_list" class="list-group">
+					<div class="list-group-item">接続可能なKUE-CHIP2はありません</div>
+				</div>
+
+				<div class="btn-group" role="group">
+					<button type="button" class="btn btn-default" onclick="buttonUpdateList()">
+						<span class="glyphicon glyphicon-refresh" aria-hidden="true"></span> リストの更新
+					</button>
+				</div>
+				
+			</div>
 		</div>
 
 		<script src="js/jquery.min.js"></script>
@@ -123,6 +156,8 @@
 			var pc = 0;
 			var breakpoints = {};
 			var traceEnabled = false;
+			var kemuName = Math.random().toString(36).slice(-8);
+			var connectedName = null;
 
 			function loadHex(s) {
 				var i = 0, n = 0;
@@ -243,6 +278,14 @@
 						$('.break-button-' + addr.toString()).css('color', '#F33');
 					}
 				}
+				var s = "";
+				if (core.halted) {
+					s = "プログラムの実行が停止しました。初期状態に戻すには「リセット」を選択してください。";;
+				} else if (pc == 0){
+					if (traceEnabled) s = "トレース実行するには、「ステップ実行」または「フェーズ実行」を選択してください";
+					else s = "実行するには、「実行/停止」もしくは「ステップ実行」、「フェーズ実行」を選択してください";
+				}
+				$('#infobox_text').text(s);
 			}
 
 			function disassemble() {
@@ -329,9 +372,13 @@
 
 				$('#trace_enabled').change(function(){
 					traceEnabled = $('#trace_enabled').prop('checked') ? true : false;
+					updateInterface();
+					if (traceEnabled && pc != 0) $('#infobox_text').text("最初からトレースを実行するには、「リセット」を選択してください");
 				});
-			});
 
+				$('#io_name').text(kemuName);
+				buttonUpdateList();
+			});
 			function runPhase() {
 				if (core.halted) return;
 				var p = core.reg["PHASE"];
@@ -422,6 +469,26 @@
 
 			function buttonTraceClear() {
 				$('#trace_body').empty();
+			}
+
+			function buttonUpdateList() {
+				$('#io_connect_list').empty();
+				var count = 0;
+				for (var key in localStorage) {
+					var rex = key.match(/^KEMU-(.*)$/);
+					if (rex) {
+						var name = rex[1];
+						if (name == kemuName) continue;
+						var div = $('<div>').addClass('list-group-item').text(name).click(function(){
+							connectedName = name;
+							$('#io_connected_name').text(name);
+						});
+						$('#io_connect_list').append(div);
+					}
+				}
+				if (count == 0) {
+						$('#io_connect_list').append($('<div>').addClass('list-group-item').text("接続可能なKUE-CHIP2はありません"));
+				}
 			}
 		</script>
 	</body>

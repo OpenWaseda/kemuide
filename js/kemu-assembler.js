@@ -161,6 +161,8 @@
 							if      (a[3] == "ACC") op_b = 0;
 							else if (a[3] == "IX")  op_b = 1;
 							else if (a[3] == "[" || a[3] == "(") {
+								var startBrace = a[3];
+								var endBrace = a[a.length - 1];
 								val = -2;
 								op_b = (a[3] == "[" ? 4 : 5);
 								a.splice(0, 4);
@@ -169,10 +171,11 @@
 									if (a[1] != "+") throw new KasmException("'IX' の後に '+' が必要です");
 									a.splice(0, 2);
 								}
-								if (a[a.length - 1] == "]" || a[a.length - 1] == ")") {
+								if (startBrace == '(' && endBrace == ')' ||
+								   startBrace == '[' && endBrace == ']') {
 									a.splice(-1);
 								} else {
-									throw new KasmException("閉じ括弧がありません");
+									throw new KasmException("閉じ括弧が不適切です");
 								}
 							} else {
 								val = -2;
@@ -185,7 +188,7 @@
 							if (val != -1) {
 								this.binary[addr++] = val;
 								if (val == -2) {
-									patches.push({address: addr - 1, token: a, line: l});
+									patches.push({address: addr - 1, token: a, line: l, mask: (startBrace == '(' ? 0x1FF : 0xFF)});
 								}
 							}
 						} else if (simpleOp[a[0]] != undefined) {
@@ -200,7 +203,7 @@
 							ended = l;
 						} else if (branchCC[a[0]] != undefined) {
 							this.binary[addr++] = branchCC[a[0]] + 48;
-							patches.push({address: addr, token: a.slice(1), line:l});
+							patches.push({address: addr, token: a.slice(1), line:l, mask: 0xFF});
 							meta.jumpTo = addr;
 							if (a[0] == "BA") meta.jumpMode = -2;
 							else meta.jumpMode = 1;
@@ -239,7 +242,7 @@
 				}
 				try {
 					var val = this.calculate(token);
-					if (val & (~0xFF)) throw new KasmException("計算の結果の値 " + val + "が大きすぎます");
+					if (val & (~patches[i].mask)) throw new KasmException("計算の結果の値 " + val + "が大きすぎます");
 					val &= 0xFF;
 					this.binary[addr] = val;
 				} catch (e) {

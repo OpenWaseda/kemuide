@@ -83,4 +83,9 @@ input.warning {
 	background-color: #f99;
 }
 
+#infobox {
+	margin: 0.5em 0;
+	color: #999;
+}
+
 
