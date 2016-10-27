@@ -50,20 +50,24 @@
 					aria-controls="content_reassemble" role="tab" data-toggle="tab">逆アセンブル</a>
 			</li>
 			<li role="presentation">
-				<a id="tab_memory" href="#content_memory"
+				<a id="tab_memory_program" href="#content_memory"
 					aria-controls="content_memory" role="tab" data-toggle="tab">プログラムメモリ</a>
 			</li>
 			<li role="presentation">
-				<a id="tab_memory" href="#content_user"
+				<a id="tab_memory_user" href="#content_user"
 					aria-controls="content_user" role="tab" data-toggle="tab">ユーザーメモリ</a>
 			</li>
 			<li role="presentation">
-				<a id="tab_memory" href="#content_trace"
+				<a id="tab_trace" href="#content_trace"
 					aria-controls="content_trace" role="tab" data-toggle="tab">トレース</a>
 			</li>
 			<li role="presentation">
-				<a id="tab_memory" href="#content_io"
-					aria-controls="content_io" role="tab" data-toggle="tab">他のKUE-CHIP2を接続</a>
+				<a id="tab_statistics" href="#content_statistics"
+					aria-controls="content_statistics" role="tab" data-toggle="tab">統計</a>
+			</li>
+			<li role="presentation">
+				<a id="tab_io" href="#content_io"
+					aria-controls="content_io" role="tab" data-toggle="tab">外部接続</a>
 			</li>
 		</ul>
 		<div class="tab-content">
@@ -113,6 +117,26 @@
 				<button type="button" class="btn btn-default" style="float: right" onclick="buttonTraceClear()">
 					<span class="glyphicon glyphicon-trash" aria-hidden="true"></span> クリア
 				</button>
+			</div>
+			<div role="tabpanel" class="tab-pane" id="content_statistics">
+				<h2>統計</h2>
+				<p>統計を使用するには、「実行/停止」を選択してください</p>
+				<table class="table table-bordered" style="margin: 1em 0 0 0; table-layout: fixed">
+					<thead>
+						<th>名前</th>
+						<th>値</th>
+					</thead>
+					<tbody>
+						<tr><td>総実行時間</td><td><span id="statistics_process_time"></span></td></tr>
+						<tr><td>総命令数</td><td><span id="statistics_instruction_count"></span></td></tr>
+						<tr><td>総フェーズ数</td><td><span id="statistics_phase_count"></span></td></tr>
+						<tr><td>実効動作周波数</td><td><span id="statistics_effective_freq"></span></td></tr>
+						<tr><td>フェーズ最大処理時間</td><td><span id="statistics_max_phase_time"></span></td></tr>
+						<tr><td>フェーズ平均処理時間</td><td><span id="statistics_ave_phase_time"></span></td></tr>
+						<tr><td>命令最大処理時間</td><td><span id="statistics_max_instruction_time"></span></td></tr>
+						<tr><td>命令平均処理時間</td><td><span id="statistics_ave_instruction_time"></span></td></tr>
+					</tbody>
+				</table>
 			</div>
 			<div role="tabpanel" class="tab-pane" id="content_io">
 				<h2>別のKUE-CHIP2と接続する</h2>
@@ -338,6 +362,7 @@
 					else message += "実行するには、「実行/停止」もしくは「ステップ実行」、「フェーズ実行」を選択してください";
 				}
 				$('#infobox_text').html(message.replace(/\n/g, "<br>"));
+				KemuStatistics.showStatistics();
 			}
 
 			function disassemble() {
@@ -477,11 +502,74 @@
 					connectedTimer = setTimeout(connectTimerFunction, 600);
 				}, 600);
 			});
-			function runPhase() {
+
+			var KemuStatistics = (function(core, $){
+				var phaseBeginTime = 0;
+				var instructionBeginTime = 0;
+				var beginTime = 0, endTime = 0;
+				var phaseCount = 0, instructionCount = 0;
+				var phaseTime = 0, maxPhaseTime = 0;
+				var instructionTime = 0, maxInstructionTime = 0;
+				return {
+					showStatistics: function(){
+						var now = +new Date();
+						var processTime = endTime == 0 ? now - beginTime : endTime - beginTime;
+						if (beginTime == 0) processTime = 0;
+						$('#statistics_process_time').text(processTime.toString() + "ms");
+						$('#statistics_instruction_count').text(instructionCount.toString());
+						$('#statistics_phase_count').text(phaseCount.toString());
+						$('#statistics_max_phase_time').text((maxPhaseTime * 1000).toFixed(2) + "us");
+						$('#statistics_ave_phase_time').text(phaseCount == 0 ? "-" : (phaseTime / phaseCount * 1000).toFixed(2) + "us");
+						$('#statistics_max_instruction_time').text(maxInstructionTime.toFixed(2) + "ms");
+						$('#statistics_ave_instruction_time').text(instructionCount == 0 ? "-" : (instructionTime / instructionCount).toFixed(2) + "ms");
+						var ratio = phaseCount / processTime * 1000;
+						var s = ratio.toFixed(2) + "Hz";
+						if (ratio > 1000) s = (ratio / 1000).toFixed(2) + "kHz";
+						if (processTime == 0) s = "-";
+						$('#statistics_effective_freq').text(s);
+					},
+					start: function(){
+						this.reset();
+						beginTime = +new Date();
+					},
+					stop: function(){
+						endTime = +new Date();
+					},
+					prePhase: function(){
+						var now = +new Date();
+						phaseBeginTime = now;
+						if (core.reg["PHASE"] == 0)
+							instructionBeginTime = now;
+					},
+					postPhase: function(){
+						var now = +new Date();
+						var delta = now - phaseBeginTime;
+						phaseTime += delta;
+						phaseCount++;
+						if (delta > maxPhaseTime) maxPhaseTime = delta;
+						if (core.reg["PHASE"] == 0) {
+							delta = now - instructionBeginTime;
+							instructionCount++;
+							instructionTime += delta;
+							if (delta > maxInstructionTime) maxInstructionTime = delta;
+						}
+					},
+					reset: function(){
+						phaseBeginTime = instructionBeginTime = beginTime
+							= endTime = phaseCount = instructionCount 
+							= phaseTime = instructionTime = maxPhaseTime
+							= maxInstructionTime = 0;
+					}
+				};
+			})(core, jQuery);
+
+			function runPhase(isStartStop) {
 				if (core.halted) return;
 				var p = core.reg["PHASE"];
+				if (isStartStop) KemuStatistics.prePhase();
 				core.runSinglePhase();
-				if (traceEnabled) {
+				if (isStartStop) KemuStatistics.postPhase();
+				if (traceEnabled && !isStartStop) {
 					var tr = $('<tr>')
 						.append($('<td>').text(("0" + pc.toString(16)).slice(-2).toUpperCase()))
 						.append($('<td>').text(p))
@@ -516,16 +604,18 @@
 			var runningDelta = -1;
 			function buttonRunStop() {
 				if (runningTimer != null) {
+					KemuStatistics.stop();
 					clearTimeout(runningTimer);
 					runningTimer = null;
 				} else {
+					KemuStatistics.start();
 					runningStart = +new Date();
 					var timerCount = 0, timerTime, lastUpdatedTime = runningStart;
 					runningTimer = setTimeout(function runningTimerCallback(){
 						timerTime = +new Date();
-						core.runSinglePhase();
-						if (core.reg["PHASE"] == 0) pc = core.reg["PC"];
+						runPhase(true);
 						if (core.halted || (core.reg["PHASE"] == 0 && breakpoints[pc] != undefined)) {
+							KemuStatistics.stop();
 							runningTimer = null;
 							if (timerCount > 0) runningDelta = timerTime - runningStart;
 							updateInterface(true);
@@ -562,6 +652,7 @@
 					runningTimer = null;
 				}
 				core.reset();
+				KemuStatistics.reset();
 				pc = 0;
 				updateInterface(false);
 				return false;
