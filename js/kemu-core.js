@@ -129,10 +129,7 @@
 							if (this.ioPreHandler) this.ioPreHandler();
 						}
 						var flag = this.reg["FLAG"];
-						var cf = (flag & 8) > 0 ? true : false;
-						var vf = (flag & 4) > 0 ? true : false;
-						var nf = (flag & 2) > 0 ? true : false;
-						var zf = (flag & 1) > 0 ? true : false;
+						var cf = (flag & 8) > 0, vf = (flag & 4) > 0, nf = (flag & 2) > 0, zf = (flag & 1) > 0;
 						var branch = false;
 						if      (cc ==  0) branch = true;		// BA
 						else if (cc ==  1) branch = !zf;		// BNZ
@@ -154,10 +151,7 @@
 					}
 				} else if (opecode == 4) {	// Ssm, Rsm
 					var flag = this.reg["FLAG"];
-					var cf = (flag & 8) > 0 ? true : false;
-					var vf = (flag & 4) > 0 ? true : false;
-					var nf = (flag & 2) > 0 ? true : false;
-					var zf = (flag & 1) > 0 ? true : false;
+					var cf = (flag & 8) > 0, vf = (flag & 4) > 0, nf = (flag & 2) > 0, zf = (flag & 1) > 0;
 					var val = a == 0 ? this.reg["ACC"] : this.reg["IX"];
 					var cf2 = (sm & 1) == 0 ? (val & 1) > 0 : (val & 128) > 0;
 					if ((sm & 1) == 0) val >>= 1;
@@ -192,10 +186,7 @@
 						this.memory[this.reg["MAR"]] = val;
 					} else {
 						var flag = this.reg["FLAG"];
-						var cf = (flag & 8) > 0 ? true : false;
-						var vf = (flag & 4) > 0 ? true : false;
-						var nf = (flag & 2) > 0 ? true : false;
-						var zf = (flag & 1) > 0 ? true : false;
+						var cf = (flag & 8) > 0, vf = (flag & 4) > 0, nf = (flag & 2) > 0, zf = (flag & 1) > 0;
 						var val = 0, val1 = a == 0 ? this.reg["ACC"] : this.reg["IX"], val2;
 						if (b < 2) val2 = b == 0 ? this.reg["ACC"] : this.reg["IX"];
 						else val2 = this.memory[this.reg["MAR"]];
