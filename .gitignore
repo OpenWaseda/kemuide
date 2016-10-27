@@ -1,0 +1,6 @@
+*~
+*.swp
+.*~
+.*.swp
+Session.vim
+tags
