@@ -192,8 +192,8 @@
 
 			core.ioPreHandler = function(){
 				var me = JSON.parse(localStorage["KEMU-" + kemuName]);
-				core.flag["IBUF"] = me.iflag || 0;
-				core.reg["IBUF"] = me.ibuf || false;
+				core.flag["IBUF"] = me.iflag || false;
+				core.reg["IBUF"] = me.ibuf || 0;
 				if (!connectedName) return;
 				var target = JSON.parse(localStorage["KEMU-" + connectedName]);
 				if (!target) return;
