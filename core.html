@@ -208,13 +208,13 @@
 					oflag: core.flag["OBUF"],
 					iflag: core.flag["IBUF"]
 				};
-				localStorage["KEMU-" + kemuName] = JSON.stringify(obj);
+				localStorage.setItem("KEMU-" + kemuName, JSON.stringify(obj));
 				if (connectedName) {
-					obj = JSON.parse(localStorage["KEMU-" + connectedName]);
+					obj = JSON.parse(localStorage.getItem("KEMU-" + connectedName));
 					if (obj.iflag != core.flag["OBUF"] || obj.ibuf == core.reg["OBUF"]) {
 						obj.iflag = core.flag["OBUF"];
 						obj.ibuf = core.reg["OBUF"];
-						localStorage["KEMU-" + connectedName] = JSON.stringify(obj);
+						localStorage.setItem("KEMU-" + connectedName, JSON.stringify(obj));
 					}
 				}
 			};
@@ -430,13 +430,15 @@
 			function updateCoreList() {
 				$('#io_connect_list').empty();
 				var count = 0, enabled = false;
-				for (var key in localStorage) {
+				for (var i = 0; i < localStorage.length; i++) {
+					var key = localStorage.key(i);
 					var rex = key.match(/^KEMU-(.*)$/);
 					if (rex) {
 						var name = rex[1];
 						if (name == kemuName) continue;
-						if (+new Date() - JSON.parse(localStorage["KEMU-" + name]).timestamp > 1800) {
-							delete localStorage["KEMU-" + name];
+						if (+new Date() - JSON.parse(localStorage.getItem("KEMU-" + name)).timestamp > 1800) {
+							localStorage.removeItem("KEMU-" + name);
+							i--;
 							continue;
 						}
 						if (name == connectedName) enabled = true;
@@ -493,10 +495,11 @@
 
 				core.ioPostHandler();
 				connectTimer = setTimeout(function connectTimerFunction(){
-					if (localStorage["KEMU-" + kemuName]) {
-						var obj = JSON.parse(localStorage["KEMU-" + kemuName]);
+					var val = localStorage.getItem("KEMU-" + kemuName);
+					if (val) {
+						var obj = JSON.parse(val);
 						obj.timestamp = +new Date();
-						localStorage["KEMU-" + kemuName] = JSON.stringify(obj);
+						localStorage.setItem("KEMU-" + kemuName, JSON.stringify(obj));
 					}
 					updateCoreList();
 					connectedTimer = setTimeout(connectTimerFunction, 600);
