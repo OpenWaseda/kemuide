@@ -1,2 +1,8 @@
+*~
+*.swp
+.*~
+.*.swp
+Session.vim
+tags
 emu/bin/*
 .swp
