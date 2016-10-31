@@ -163,6 +163,8 @@
 					else if (sm == 6) val = (val & 0x7E) + (cf2 ? 128 : 0);
 					else if (sm == 7) val = (val & 0xFE) + (cf2 ? 1 : 0);
 					this.reg["FLAG"] = (cf2 ? 8 : 0) + (vf ? 4 : 0) + (nf ? 2 : 0) + (zf ? 1 : 0);
+					if (a == 0) this.reg["ACC"] = val;
+					else 		this.reg["IX"] = val;
 				} else if (opecode >= 6) {
 					if (b >= 2) {
 						if (p == 2) {
