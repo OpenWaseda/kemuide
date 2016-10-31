@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<style>
+		dt {
+			margin-top: 8px;
+		}
+		dd {
+			padding-left: 32px;
+		}
+	</style>
+</head>
+<body data-spy="scroll" data-target="#nav-area" style="position: relative;">
+<div class="container">
+<div class="row">
+<div id="nav-area" class="hidden-xs col-sm-3 col-md-3 col-lg-3">
+<ul class="nav nav-pills nav-stacked" style="position: fixed; top: 32px;">
+	<li role="presentation" class="active"><a href="#man-abst">はじめに</a></li>
+	<li role="presentation"><a href="#man-asm">アセンブラの操作</a></li>
+	<li role="presentation"><a href="#man-emu">エミュレータの操作</a></li>
+</ul>
+</div>
+<div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
+	<h2>KEMU-IDE Instruction Manual</h2>
+	<h2 id="man-abst">はじめに</h2>
+		<p>
+			KEMU-IDEは，<a href="https://github.com/OpenWaseda">
+			The OpenWaseda Project
+			</a>の成果物です．内容はすべて
+			<a href="https://opensource.org/licenses/mit-license.php">
+			MITライセンス</a>の下，
+			<a href="https://github.com/OpenWaseda/kemuide">GitHub</a>
+			で公開されています．
+		</p>
+		<p>
+		このKEMU-IDEは，教育用マイコン
+		KUE-CHIP2の動作をエミュレートすると共に，
+		KUE-CHIP2の命令バイナリを出力するアセンブラを統合的に提供します．
+		</p>
+
+	<h2 id="man-asm">アセンブラの操作</h2>
+	<p><a href="index.html" class="btn btn-default" target="blank">
+		アセンブラ開発環境を起動
+	</a></p>
+	<dl>
+		<h3>操作方法の説明</h3>
+		<dt>「新規作成」</dt>
+		<dd>現在の内容を消去して，新しいプログラムを作成します，</dd>
+		<dt>「開く」→「ファイルを開く」</dt>
+		<dd>アセンブラテキストのファイルをアップロードできます．</dd>
+		<dt>「開く」→「サンプルを開く」</dt>
+		<dd>サンプルプログラムを開きます．（未実装です．）<dd>
+		<dt>「アセンブル」</dt>
+		<dd>プログラムをアセンブルします．
+		アセンブルとは，プログラムを人間可読な言語から，
+		機械可読な言語（機械語）に変換することです．
+		下の「出力」エリアに，アセンブル結果と，
+		エラーメッセージ（失敗した場合）もしくは機械語列
+		（成功した場合）が出力されます．<dd>
+		<dt>「KUE-CHIP2で実行」</dt>
+		<dd>コンパイル結果が読み込まれた
+		KUE-CHIP2エミュレータを起動します．
+		エミュレータ上で「実行/停止」することで，
+		プログラムを動作させることができます．<dd>
+		<dt>「マニュアル」</dt>
+		<dd>この説明書を開きます．<dd>
+
+		<h3>KEMU-IDEアセンブリ言語の仕様</h3>
+			（作成中…）
+	</dl>
+	<h2 id="man-emu">エミュレータの操作</h2>
+
+</div>
+</div>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+</body>
+</html>
