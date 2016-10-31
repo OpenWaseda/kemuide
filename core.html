@@ -415,7 +415,7 @@
 							continue;
 						}
 						if (name == connectedName) enabled = true;
-						var div = $('<div>').addClass('list-group-item').text(name).click(function(){
+						var div = $('<a>').addClass('list-group-item').addClass('button').text(name).click(function(){
 							connectedName = $(this).text();
 							$('#io_connected_name').text(connectedName);
 						});
@@ -431,7 +431,7 @@
 				if (count == 0) {
 						$('#io_connect_list').append($('<div>').addClass('list-group-item').text("現在接続可能なKUE-CHIP2はありません"));
 				} else {
-					$('#io_connect_list').append($('<div>').addClass('list-group-item').text("接続を解除").click(function(){
+					$('#io_connect_list').append($('<a>').addClass('list-group-item').text("接続を解除").click(function(){
 						connectedName = null;
 						$('#io_connected_name').text("接続していません");
 					}));
