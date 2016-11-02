@@ -64,7 +64,7 @@
 					do {
 						ins.push(this.memory[index++]);
 						count++;
-					} while (count < 4 && this.memory[index] == 5);
+					} while (count < 4 && (this.memory[index] >> 4) == 5);
 				} else {
 					var opTable = ["LD", "ST", "SBC", "ADC", "SUB", "ADD", "EOR", "OR", "AND", "CMP"];
 					ins.push(opTable[opecode - 6]);
