@@ -119,7 +119,7 @@
 					}
 					if (this.ioPostHandler) this.ioPostHandler();
 				} else if (opecode == 2) {	// RCF, SCF
-					this.reg["FLAG"] = (this.reg["FLAG"] & ~8) + a;
+					this.reg["FLAG"] = (this.reg["FLAG"] & ~8) + a * 8;
 				} else if (opecode == 3) {	// Bcc
 					if (p == 2) {
 						this.reg["MAR"] = this.reg["PC"]++;
