@@ -4,9 +4,10 @@
  **/
 
 ;(function(window){
-	var KasmException = function(message) {
+	var KasmException = function(message, val) {
 		this.message = message;
 		this.name = "KasmException";
+		this.val = val !== undefined ? val : 0;
 	}
 	KasmException.prototype.toString = function(){
 		return this.message + "\n";
@@ -65,6 +66,9 @@
 						throw new KasmException("式の括弧が対応していません");
 					calculate(token.slice(1, token.length - 1), 0);
 				} else {
+					if (token.length != 1) {
+						throw new KasmException("式に余分な項があります", 1);
+					}
 					if (typeof token[0] != "number") {
 						if (token.length == 1) {
 							if (token.length == 1 && "Hh".indexOf(token[0][token[0].length-1]) != -1)
@@ -133,7 +137,14 @@
 							}
 							var val = 0, iseq = 0;
 							if (a.length > 3 && a[2] == "EQU") {
-								val = this.calculate(a.slice(3));
+								try {
+									val = this.calculate(a.slice(3));
+								} catch (e) {
+									if (e instanceof KasmException && e.val == 1) {
+										throw new KasmException("EQU の右辺の式が余分です。メモリに初期値を代入するにはST命令を使用します。");
+
+									} else throw e;
+								}
 								iseq = 1;
 							} else {
 								val = addr;
