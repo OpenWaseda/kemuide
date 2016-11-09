@@ -145,8 +145,8 @@
 						else if (cc == 11) branch = zf || nf;	// BZN
 						else if (cc == 12) branch = this.flag["OBUF"];	// BNO
 						else if (cc == 13) branch = cf;			// BC
-						else if (cc == 14) branch = vf == nf;	// BLT
-						else if (cc == 15) branch = vf == nf || nf;	// BLE
+						else if (cc == 14) branch = vf != nf;	// BLT
+						else if (cc == 15) branch = vf != nf || zf;	// BLE
 						if (branch) this.reg["PC"] = this.memory[this.reg["MAR"]];
 					}
 				} else if (opecode == 4) {	// Ssm, Rsm
