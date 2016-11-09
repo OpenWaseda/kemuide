@@ -293,7 +293,7 @@
 				}
 				if (i > 0 && metadata[i - 1].jumpMode >= 0 && metadata[i - 1].opecode != null &&
 					("SR".indexOf(metadata[i - 1].opecode[0]) != -1) && "RL".indexOf(metadata[i - 1].opecode[1]) != -1) {
-					if (metadata[i].opecode[0] == "B" && metadata[i].opecode != "BA" && metadata[i].opecode != "BNC" && metadata[i].opecode != "BC") {
+					if (metadata[i].opecode[0] == "B" && metadata[i].opecode != "BA" && metadata[i].opecode != "BNO" && metadata[i].opecode != "BNI") {
 						this.message("情報(" + (metadata[i].line + 1) + "行目): ロテート, シフト命令の結果のフラグレジスタに依存する処理に見えます。KUE-CHIP2の問題により正しく実行されない可能性が有ります。");
 					}
 				}
