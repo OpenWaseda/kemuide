@@ -212,10 +212,10 @@
 						if (12 <= opecode && opecode <= 14) vf = false;
 						else vf = (val1 & 128) != (val & 128);
 						nf = ((val & 128) > 0);
+						val = val & 0xFF;
 						zf = val == 0;
 						this.reg["FLAG"] = (cf ? 8 : 0) + (vf ? 4 : 0) + (nf ? 2 : 0) + (zf ? 1 : 0);
 						if (opecode != 15) {	// !CMP
-							val = val & 0xFF;
 							if (a == 0) this.reg["ACC"] = val;
 							else        this.reg["IX"]  = val;
 						}
