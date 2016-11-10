@@ -116,12 +116,14 @@
 			var patches = [];
 			var ended = -1;
 			var metadata = [], addrToMetadata = {};
+			var VALUE_NOT_FIXED = 0xFFF1, VALUE_FIXED = 0xFFF2;
 			this.message("アセンブルを開始しました。");
 			for (var l = 0; l < lines.length; l++) {
 				var line = lines[l];
 				var labelFlg = 0;
 				try {
-					var meta = {line: l, address: addr, jumpTo: -1, jumpMode: 0, reachable: 0, opecode: null};
+					var meta = {line: l, address: addr, jumpTo: -1, jumpMode: 0, reachable: 0, opecode: null,
+								acc: VALUE_NOT_FIXED, ix: VALUE_NOT_FIXED};
 					var a = this.tokenize(line);
 					if (ended >= 0) {
 						if (a.length > 0) {
@@ -163,8 +165,8 @@
 					if (a.length > 0) {
 						meta.opecode = a[0];
 						if (normalBinaryOp[a[0]] != undefined) {
-							var code = 0, op_a = 0, op_b = 0, val = -1;
-							code += (normalBinaryOp[a[0]] << 4);
+							var code = 0, op = normalBinaryOp[a[0]], op_a = 0, op_b = 0, val = -1;
+							code += (op << 4);
 							if      (a[1] == "ACC") op_a = 0;
 							else if (a[1] == "IX")  op_a = 1;
 							else throw new KasmException("オペレータ " + a[0] + " の第一オペランドに指定できるのはACCかIXのみです。 '" + a[1] + "' は指定できません。");
@@ -205,6 +207,13 @@
 									patches.push({address: addr - 1, token: a, line: l, mask: (startBrace == '(' ? 0x1FF : 0xFF)});
 								}
 							}
+							// if (op == 6) { // LD
+							// 	if (op_a == 0) meta.acc = VALUE_FIXED;
+							// 	else		   meta.ix  = VALUE_FIXED;
+							// } else if (op == 7) {	// ST
+							// 	if      (op_b == 0) meta.acc = VALUE_FIXED;
+							// 	else if (op_b == 1) meta.ix  = VALUE_FIXED;
+							// }
 						} else if (simpleOp[a[0]] != undefined) {
 							this.binary[addr++] = simpleOp[a[0]];
 							if (a.length > 1) {
@@ -238,8 +247,8 @@
 							else throw new KasmException("命令 '" + a[0] + "' を認識できません。");
 						}
 						addrToMetadata[meta.address] = meta;
+						metadata.push(meta);
 					}
-					metadata.push(meta);
 				} catch (e) {
 					if (e instanceof KasmException) {
 						this.message("エラー(" + (l+1) + "行目): " + e.message);
