@@ -185,7 +185,15 @@
 						} else if (p == 3 && b >= 4) {
 							var d = this.memory[this.reg["MAR"]];
 							if ((b & 1) > 0) d += 0x100;
-							if ((b & 2) > 0) d += this.reg["IX"];
+							if ((b & 2) > 0) {
+								var xx = this.reg["IX"];
+								if (xx & 0x80) {
+									xx = (~xx & 0xFF) + 1;
+									d -= xx;
+								} else {
+									d += xx;
+								}
+							}
 							this.reg["MAR"] = d;
 							return;
 						}
