@@ -110,18 +110,16 @@
 				if (opecode == 0) {		// HLT, NOP
 					if (a > 0) this.halted = true;
 				} else if (opecode == 1) {	// OUT, IN
-					if (p == 2) {
+					if (a == 0) {	// OUT
+						if (p == 2) this.reg["OBUF"] = this.reg["ACC"];
+						else this.flag["OBUF"] = true;
+					} else {
 						if (this.ioPreHandler) this.ioPreHandler();
-						if (a == 0) {	// OUT
-							this.reg["OBUF"] = this.reg["ACC"];
-							this.flag["OBUF"] = true;
-						} else {
-							this.reg["ACC"] = this.reg["IBUF"];
-							this.flag["IBUF"] = false;
-						}
-						if (this.ioPostHandler) this.ioPostHandler();
-						return;
-					}	// p == 3
+						if (p == 2) this.reg["ACC"] = this.reg["IBUF"];
+						else this.flag["IBUF"] = false;
+					}
+					if (this.ioPostHandler) this.ioPostHandler();
+					if (p == 2) return;
 				} else if (opecode == 2) {	// RCF, SCF
 					this.reg["FLAG"] = (this.reg["FLAG"] & ~8) + a * 8;
 				} else if (opecode == 3) {	// Bcc
