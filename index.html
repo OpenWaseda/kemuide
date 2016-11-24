@@ -146,12 +146,16 @@
 			var kasm = new KemuAssembler();
 			kasm.message = writeOutput;
 			function buttonAssemble() {
+				try {
 				if (kasm.assemble(editor.getValue())) {
 					var s = "", i;
 					for (i = 0; i < kasm.binary.length; i++) {
 						s += ("00" + kasm.binary[i].toString(16)).slice(-2) + ' ';
 					}
 					kasm.message(s);
+				}
+				} catch (e) {
+					writeOutput("内部エラーが発生しました。この問題を報告してください。<br>\nメッセージ: " + e + (e.stack ? "<br>スタック: " + e.stack.toString() : ""));
 				}
 				return false;
 			}
