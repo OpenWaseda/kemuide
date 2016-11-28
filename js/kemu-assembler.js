@@ -25,7 +25,7 @@
 			c = line[i++];
 			while (true) {
 				while (i <= line.length && c.match(/\s/)) c = line[i++];
-				if (i > line.length || c == '#') break;
+				if (i > line.length || c == '#' || c == '*') break;
 				if (c.match(/[A-Za-z_]/)) {
 					var s = "";
 					do {
