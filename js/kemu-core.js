@@ -107,8 +107,8 @@
 				var a = (cc & 8) > 0 ? 1 : 0;
 				var sm = cc & 3;
 				var b = cc & 7;
-				if (opecode == 0) {		// HLT, NOP
-					if (a > 0) this.halted = true;
+				if (opecode == 0 || opecode == 5) {		// HLT, NOP
+					if (opecode == 5 || a > 0) this.halted = true;
 				} else if (opecode == 1) {	// OUT, IN
 					if (a == 0) {	// OUT
 						if (p == 2) this.reg["OBUF"] = this.reg["ACC"];
@@ -178,7 +178,7 @@
 					} else {	// phase 3
 						this.reg["FLAG"] = (+this.srFlagSave || 0) & 0xFF;
 					}
-				} else if (opecode >= 6) {
+				} else {	// opecode >= 6
 					if (b >= 2) {
 						if (p == 2) {
 							this.reg["MAR"] = this.reg["PC"]++;
