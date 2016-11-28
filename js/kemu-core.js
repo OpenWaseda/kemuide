@@ -26,11 +26,12 @@
 		reset: function(){
 			this.halted = 0;
 			for (var k in this.reg) {
-				if (k) this.reg[k] = 0;
+				if (k && k != "IBUF") this.reg[k] = 0;
 			}
 			this.flag["IBUF"] = false;
 			this.flag["OBUF"] = false;
 			this.srFlagSave = null;
+			if (this.ioPostHandler) this.ioPostHandler(this);
 		},
 		disassemble: function() {
 			var index = 0;
@@ -114,11 +115,11 @@
 						if (p == 2) this.reg["OBUF"] = this.reg["ACC"];
 						else this.flag["OBUF"] = true;
 					} else {
-						if (this.ioPreHandler) this.ioPreHandler();
+						if (this.ioPreHandler) this.ioPreHandler(this);
 						if (p == 2) this.reg["ACC"] = this.reg["IBUF"];
 						else this.flag["IBUF"] = false;
 					}
-					if (this.ioPostHandler) this.ioPostHandler();
+					if (this.ioPostHandler) this.ioPostHandler(this);
 					if (p == 2) return;
 				} else if (opecode == 2) {	// RCF, SCF
 					this.reg["FLAG"] = (this.reg["FLAG"] & ~8) + a * 8;
@@ -128,7 +129,7 @@
 						return;
 					} else {
 						if (cc == 4 || cc == 12) {
-							if (this.ioPreHandler) this.ioPreHandler();
+							if (this.ioPreHandler) this.ioPreHandler(this);
 						}
 						var flag = this.reg["FLAG"];
 						var cf = (flag & 8) > 0, vf = (flag & 4) > 0, nf = (flag & 2) > 0, zf = (flag & 1) > 0;
