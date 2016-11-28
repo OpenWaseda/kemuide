@@ -114,6 +114,7 @@
 					</table>
 				</div>
 				<label style="display: block; padding: 0.5em; float: left; width: 24em;"><input type="checkbox" id="trace_enabled">トレースを有効にする</label>
+				<label style="display: block; padding: 0.5em; float: left; width: 24em;"><input type="checkbox" id="revive_bugs">KUE-CHIP2のバグを再現(実験的)</label>
 				<button type="button" class="btn btn-default" style="float: right" onclick="buttonTraceClear()">
 					<span class="glyphicon glyphicon-trash" aria-hidden="true"></span> クリア
 				</button>
@@ -185,7 +186,7 @@
 			var core = new KemuCore();
 			var pc = 0;
 			var breakpoints = {};
-			var traceEnabled = false;
+			var traceEnabled = false, reviveBugs = false;
 			var kemuName = Math.random().toString(36).slice(-8);
 			var connectedName = null;
 			var connectTimer = null;
@@ -490,6 +491,11 @@
 					if (traceEnabled && pc != 0) $('#infobox_text').text("最初からトレースを実行するには、「リセット」を選択してください");
 				});
 
+				$('#revive_bugs').change(function(){
+					reviveBugs = $('#revive_bugs').prop('checked') ? true : false;
+					updateInterface();
+				});
+
 				$('#io_name').text(kemuName);
 				updateCoreList();
 
@@ -566,13 +572,14 @@
 				};
 			})(core, jQuery);
 
-			function runPhase(isStartStop) {
+			function runPhase(mode) {
 				if (core.halted) return;
 				var p = core.reg["PHASE"];
-				if (isStartStop) KemuStatistics.prePhase();
+				if (mode == 0) KemuStatistics.prePhase();
 				core.runSinglePhase();
-				if (isStartStop) KemuStatistics.postPhase();
-				if (traceEnabled && !isStartStop) {
+				if (mode == 2 && reviveBugs) core.srFlagSave &= 3;
+				if (mode == 0) KemuStatistics.postPhase();
+				if (traceEnabled && mode != 0) {
 					var tr = $('<tr>')
 						.append($('<td>').text(("0" + pc.toString(16)).slice(-2).toUpperCase()))
 						.append($('<td>').text(p))
@@ -591,7 +598,7 @@
 			function runInstruction() {
 				if (core.halted) return;
 				do {
-					runPhase();
+					runPhase(1);
 				} while (core.reg["PHASE"] != 0);
 				pc = core.reg["PC"];
 			}
@@ -616,7 +623,7 @@
 					var timerCount = 0, timerTime, lastUpdatedTime = runningStart;
 					runningTimer = setTimeout(function runningTimerCallback(){
 						timerTime = +new Date();
-						runPhase(true);
+						runPhase(0);
 						if (core.halted || (core.reg["PHASE"] == 0 && breakpoints[pc] != undefined)) {
 							KemuStatistics.stop();
 							runningTimer = null;
@@ -644,7 +651,7 @@
 
 			function buttonPhase() {
 				if (runningTimer != null) return false;
-				runPhase();
+				runPhase(2);
 				updateInterface(true);
 				return false;
 			}
