@@ -114,7 +114,7 @@
 					</table>
 				</div>
 				<label style="display: block; padding: 0.5em; float: left; width: 24em;"><input type="checkbox" id="trace_enabled">トレースを有効にする</label>
-				<label style="display: block; padding: 0.5em; float: left; width: 24em;"><input type="checkbox" id="revive_bugs">KUE-CHIP2のバグを再現(実験的)</label>
+				<label style="display: block; padding: 0.5em; float: left; width: 24em;"><input type="checkbox" id="revive_bugs" checked>KUE-CHIP2のバグを再現(フェーズ実行時)</label>
 				<button type="button" class="btn btn-default" style="float: right" onclick="buttonTraceClear()">
 					<span class="glyphicon glyphicon-trash" aria-hidden="true"></span> クリア
 				</button>
@@ -186,7 +186,7 @@
 			var core = new KemuCore();
 			var pc = 0;
 			var breakpoints = {};
-			var traceEnabled = false, reviveBugs = false;
+			var traceEnabled = false, reviveBugs = true;
 			var kemuName = Math.random().toString(36).slice(-8);
 			var connectedName = null;
 			var connectTimer = null;
@@ -577,7 +577,7 @@
 				var p = core.reg["PHASE"];
 				if (mode == 0) KemuStatistics.prePhase();
 				core.runSinglePhase();
-				if (mode == 2 && reviveBugs) core.srFlagSave &= 3;
+				if (mode == 2 && reviveBugs) core.srFlagSave = false;
 				if (mode == 0) KemuStatistics.postPhase();
 				if (traceEnabled && mode != 0) {
 					var tr = $('<tr>')

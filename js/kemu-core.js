@@ -155,29 +155,30 @@
 				} else if (opecode == 4) {	// Ssm, Rsm
 					if (p == 2) {
 						var flag = this.reg["FLAG"];
-						var cf = (flag & 8) > 0, vf = (flag & 4) > 0, nf = (flag & 2) > 0, zf = (flag & 1) > 0;
-						var val = a == 0 ? this.reg["ACC"] : this.reg["IX"], val0 = val;
+						var cf = (flag & 8) > 0;
+						var val = a == 0 ? this.reg["ACC"] : this.reg["IX"];
 						var cf2 = (sm & 1) == 0 ? (val & 1) > 0 : (val & 128) > 0;
 						var typ = cc & 7;
 						if ((sm & 1) == 0) val >>= 1;
 						else val <<= 1;
 						val &= 0xFF;
 						if      (typ == 0) val = (val & 0x7F) + ((val & 64) > 0 ? 128 : 0);	// SRA
-						// else if (typ == 2) sm &= 0x7F;	// SRL
 						else if (typ == 4) val = (val & 0x7F) + (cf ? 128 : 0);	// RRA
 						else if (typ == 5) val = (val & 0xFE) + (cf ? 1 : 0);	// RLA
 						else if (typ == 6) val = (val & 0x7F) + (cf2 ? 128 : 0);// RRL
 						else if (typ == 7) val = (val & 0xFE) + (cf2 ? 1 : 0);	// RLL
-						if (sm != 1) vf = false;	// SLA, RLA
-						else vf = (val & 128) != (val0 & 128);
-						nf = ((val & 128) > 0);
-						zf = val == 0;
-						this.srFlagSave = (cf2 ? 8 : 0) + (vf ? 4 : 0) + (nf ? 2 : 0) + (zf ? 1 : 0);
+						this.srFlagSave = cf2;
 						if (a == 0) this.reg["ACC"] = val;
 						else 		this.reg["IX"] = val;
 						return;
 					} else {	// phase 3
-						this.reg["FLAG"] = (+this.srFlagSave || 0) & 0xFF;
+						var val = a == 0 ? this.reg["ACC"] : this.reg["IX"];
+						var cf = !!this.srFlagSave, vf = false, nf = (val & 0x80) > 0, zf = val == 0;
+						this.reg["FLAG"] = (cf2 ? 8 : 0) + (vf ? 4 : 0) + (nf ? 2 : 0) + (zf ? 1 : 0);
+						if (sm == 1) {	// SLA, RLA
+							vf = cf != nf;
+						}
+						this.reg["FLAG"] = (cf ? 8 : 0) + (vf ? 4 : 0) + (nf ? 2 : 0) + (zf ? 1 : 0);
 					}
 				} else {	// opecode >= 6
 					if (b >= 2) {
