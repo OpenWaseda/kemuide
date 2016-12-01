@@ -178,7 +178,7 @@
 						}
 						this.reg["FLAG"] = (cf ? 8 : 0) + (vf ? 4 : 0) + (nf ? 2 : 0) + (zf ? 1 : 0);
 					}
-				} else if (opecode != 7 || b > 2) {	// opecode >= 6
+				} else if (opecode >= 6 && (opecode != 7 || b > 2)) {	// opecode >= 6
 					if (b >= 2) {
 						if (p == 2) {
 							this.reg["MAR"] = this.reg["PC"]++;
