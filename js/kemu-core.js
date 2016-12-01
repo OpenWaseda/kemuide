@@ -108,9 +108,7 @@
 				var a = (cc & 8) > 0 ? 1 : 0;
 				var sm = cc & 3;
 				var b = cc & 7;
-				if (opecode == 0 || opecode == 5) {		// HLT, NOP
-					if (opecode == 5 || a > 0) this.halted = true;
-				} else if (opecode == 1) {	// OUT, IN
+				if (opecode == 1) {	// OUT, IN
 					if (a == 0) {	// OUT
 						if (p == 2) this.reg["OBUF"] = this.reg["ACC"];
 						else this.flag["OBUF"] = true;
@@ -180,7 +178,7 @@
 						}
 						this.reg["FLAG"] = (cf ? 8 : 0) + (vf ? 4 : 0) + (nf ? 2 : 0) + (zf ? 1 : 0);
 					}
-				} else {	// opecode >= 6
+				} else if (opecode != 7 || b > 2) {	// opecode >= 6
 					if (b >= 2) {
 						if (p == 2) {
 							this.reg["MAR"] = this.reg["PC"]++;
@@ -237,6 +235,8 @@
 							else        this.reg["IX"]  = val;
 						}
 					}
+				} else if (opecode != 0 || a > 0) {	// HLT
+					this.halted = true;
 				}
 				this.reg["PHASE"] = 0;
 			}
