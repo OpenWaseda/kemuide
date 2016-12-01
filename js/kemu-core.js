@@ -99,7 +99,7 @@
 		runSinglePhase: function(){
 			if (this.halted) return;
 			var p = this.reg["PHASE"]++;
-			if      (p == 0) this.reg["MAR"] = this.reg["PC"]++;
+			if      (p == 0) this.reg["MAR"] = this.reg["PC"]++, this.reg["PC"] &= 0xFF;
 			else if (p == 1) this.reg["IR"] = this.memory[this.reg["MAR"]];
 			else {
 				var ir = this.reg["IR"];
@@ -124,6 +124,7 @@
 				} else if (opecode == 3) {	// Bcc
 					if (p == 2) {
 						this.reg["MAR"] = this.reg["PC"]++;
+						this.reg["PC"] &= 0xFF;
 						return;
 					} else {
 						if (cc == 4 || cc == 12) {
@@ -182,6 +183,7 @@
 					if (b >= 2) {
 						if (p == 2) {
 							this.reg["MAR"] = this.reg["PC"]++;
+							this.reg["PC"] &= 0xFF;
 							return;
 						} else if (p == 3 && b >= 4) {
 							var d = this.memory[this.reg["MAR"]];
