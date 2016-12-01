@@ -645,6 +645,7 @@
 
 			function buttonStep() {
 				if (runningTimer != null) return false;
+				core.halted = false;
 				runInstruction();
 				updateInterface(true);
 				return false;
@@ -652,6 +653,7 @@
 
 			function buttonPhase() {
 				if (runningTimer != null) return false;
+				core.halted = false;
 				runPhase(2);
 				updateInterface(true);
 				return false;
