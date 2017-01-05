@@ -173,7 +173,7 @@
 
 		<script src="js/jquery.min.js"></script>
 		<script src="js/bootstrap.min.js"></script>
-		<script src="js/kemu-core.js"></script>
+		<script src="js/kemu.js"></script>
 		<script>
 
 			var userMemoryModified = false;
@@ -183,7 +183,7 @@
 				"OBUF": null, "PHASE": null
 			};
 			var memoryControl = {};
-			var core = new KemuCore();
+			var core = new KUEChip2Core();
 			var pc = 0;
 			var breakpoints = {};
 			var traceEnabled = false, reviveBugs = true;
