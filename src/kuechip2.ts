@@ -232,7 +232,7 @@ class KUEChip2Core
 						cf = (val & ~0xFF) > 0
 					}
 					if (12 <= opecode && opecode <= 14) vf = false;
-					else vf = (val1 & 128) != (val & 128);
+					else vf = (val < -128 || 127 < val);
 					nf = ((val & 128) > 0);
 					val = val & 0xFF;
 					zf = val == 0;
