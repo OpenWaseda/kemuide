@@ -61,10 +61,11 @@
 		calculate: function calculate(token, p) {
 			var i, var1, var2;
 			if (p == 2) {
+				if (token.length == 0) return 0;	// left operand of single '+', '-'
 				if (token[0] == "(") {
 					if (token[token.length - 1] != ")") 
 						throw new KasmException("式の括弧が対応していません");
-					calculate(token.slice(1, token.length - 1), 0);
+					return calculate(token.slice(1, token.length - 1), 0);
 				} else {
 					if (token.length != 1) {
 						throw new KasmException("式に余分な項があります", 1);
@@ -265,7 +266,7 @@
 				}
 				try {
 					var val = this.calculate(token);
-					if (val & (~patches[i].mask)) throw new KasmException("計算の結果の値 " + val + "が大きすぎます");
+					if ((val < 0 ? ~val : val) & (~patches[i].mask)) throw new KasmException("定数値 " + val + "が大きすぎます");
 					val &= 0xFF;
 					this.binary[addr] = val;
 				} catch (e) {
