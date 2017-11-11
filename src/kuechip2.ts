@@ -220,6 +220,9 @@ class KUEChip2Core
 					var val2;
 					if (b < 2) val2 = b == 0 ? this.reg["ACC"] : this.reg["IX"];
 					else val2 = this.memory[this.reg["MAR"]];
+					val1 &= 0xFF; val2 &= 0xFF;
+					if (val1 & 0x80) val1 |= ~0xFF;
+					if (val2 & 0x80) val2 |= ~0xFF;
 					if      (opecode ==  8) val = val1 - val2 - (cf ? 1 : 0);
 					else if (opecode ==  9) val = val1 + val2 + (cf ? 1 : 0);
 					else if (opecode == 10) val = val1 - val2;
