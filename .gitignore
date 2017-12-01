@@ -6,3 +6,4 @@ Session.vim
 tags
 emu/bin/*
 .swp
+.DS_Store
