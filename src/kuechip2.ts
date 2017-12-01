@@ -223,7 +223,9 @@ class KUEChip2Core
 					val1 &= 0xFF; val2 &= 0xFF;
 					if (val1 & 0x80) val1 |= ~0xFF;
 					if (val2 & 0x80) val2 |= ~0xFF;
-					if      (opecode ==  8) val = val1 - val2 - (cf ? 1 : 0);
+					if      (opecode ==  8){
+						val = val1 - val2 - (cf ? 1 : 0);
+					}
 					else if (opecode ==  9) val = val1 + val2 + (cf ? 1 : 0);
 					else if (opecode == 10) val = val1 - val2;
 					else if (opecode == 11) val = val1 + val2;
@@ -233,6 +235,7 @@ class KUEChip2Core
 					else if (opecode == 15) val = val1 - val2;
 					if (opecode == 8 || opecode == 9) {	// SBC, ADC
 						cf = (val & ~0xFF) > 0
+						flag += (cf) ? 8 : 0;
 					}
 					if (12 <= opecode && opecode <= 14) vf = false;
 					else vf = (val < -128 || 127 < val);
