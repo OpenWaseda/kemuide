@@ -235,7 +235,11 @@ class KUEChip2Core
 					else if (opecode == 15) val = val1 - val2;
 					if (opecode == 8 || opecode == 9) {	// SBC, ADC
 						cf = (val & ~0xFF) > 0
-						flag += (cf) ? 8 : 0;
+						if((flag & 0x08) == 0 && cf){
+							flag += 8;
+						}else if((flag & 0x08) != 0 && !cf){
+							flag -= 8;
+						}
 					}
 					if (12 <= opecode && opecode <= 14) vf = false;
 					else vf = (val < -128 || 127 < val);
