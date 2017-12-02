@@ -221,10 +221,22 @@ class KUEChip2Core
 					if (b < 2) val2 = b == 0 ? this.reg["ACC"] : this.reg["IX"];
 					else val2 = this.memory[this.reg["MAR"]];
 					val1 &= 0xFF; val2 &= 0xFF;
+
+					var val1c = val1, val2c = val2, valc;//8ビットまでしかなくて9ビット目以降が全部0のはずの数たち
+
 					if (val1 & 0x80) val1 |= ~0xFF;
 					if (val2 & 0x80) val2 |= ~0xFF;
-					if (opecode ==  8)　val = val1 - val2 - (cf ? 1 : 0);
-					else if (opecode ==  9) val = val1 + val2 + (cf ? 1 : 0);
+
+					if      (opecode ==  8){
+						val = val1 - val2 - (!cf ? 1 : 0);
+						val2c = (val2c + (!cf ? 1 : 0)) & 0xFF;//繰り下がりがあったら引く数に1をたす
+						val2c = (val2c ^ 0xFF) + 1//8ビットにおける2の補数をとる
+						valc = val1c + val2c//8ビット目までしかなくて, 9ビット目以降が全部0だと思って演算
+					}
+					else if (opecode ==  9) {
+						val = val1 + val2 + (cf ? 1 : 0);
+						valc = val1c + val2c + (cf ? 1 : 0); //8ビット目までしかなくて, 9ビット目以降が全部0だと思って演算
+					}
 					else if (opecode == 10) val = val1 - val2;
 					else if (opecode == 11) val = val1 + val2;
 					else if (opecode == 12) val = val1 ^ val2;
@@ -232,12 +244,7 @@ class KUEChip2Core
 					else if (opecode == 14) val = val1 & val2;
 					else if (opecode == 15) val = val1 - val2;
 					if (opecode == 8 || opecode == 9) {	// SBC, ADC
-						cf = (val & ~0xFF) > 0
-						if((flag & 0x08) == 0 && cf){
-							this.reg["FLAG"] += 8;
-						}else if((flag & 0x08) != 0 && !cf){
-							this.reg["FLAG"] -= 8;
-						}
+						cf = (valc & ~0xFF) > 0//存在しないはずの9ビット目以降のビット立っていたら桁あふれ
 					}
 					if (12 <= opecode && opecode <= 14) vf = false;
 					else vf = (val < -128 || 127 < val);
