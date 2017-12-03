@@ -290,9 +290,9 @@ var KUEChip2Core = /** @class */ (function () {
                     if (val2 & 0x80)
                         val2 |= ~0xFF;
                     if (opecode == 8) {
-                        val = val1 - val2 - (!cf ? 1 : 0);
-                        val2c = (val2c + (!cf ? 1 : 0)) & 0xFF; //繰り下がりがあったら引く数に1をたす
-                        val2c = (val2c ^ 0xFF) + 1; //8ビットにおける2の補数をとる
+                        val = val1 - val2 - (cf ? 1 : 0); //桁あふれのある引き算は2の補数で桁あふれのない足し算
+                        val2c = val2c + (cf ? 1 : 0); //繰り下がりがあったら引く数に1をたす
+                        val2c = ((val2c ^ 0xFF) + 1) & 0xFF; //8ビットにおける2の補数をとる
                         valc = val1c + val2c; //8ビット目までしかなくて, 9ビット目以降が全部0だと思って演算
                     }
                     else if (opecode == 9) {
@@ -311,7 +311,10 @@ var KUEChip2Core = /** @class */ (function () {
                         val = val1 & val2;
                     else if (opecode == 15)
                         val = val1 - val2;
-                    if (opecode == 8 || opecode == 9) {
+                    if (opecode == 8) {
+                        cf = (valc & ~0xFF) == 0; //9ビット目以降が立っていなければ桁あふれなしでcf = true
+                    }
+                    else if (opecode == 9) {
                         cf = (valc & ~0xFF) > 0; //存在しないはずの9ビット目以降のビット立っていたら桁あふれ
                     }
                     if (12 <= opecode && opecode <= 14)
