@@ -292,7 +292,7 @@ var KUEChip2Core = /** @class */ (function () {
                     if (opecode == 8) {
                         val = val1 - val2 - (cf ? 1 : 0); //桁あふれのある引き算は2の補数で桁あふれのない足し算
                         val2c = val2c + (cf ? 1 : 0); //繰り下がりがあったら引く数に1をたす
-                        val2c = ((val2c ^ 0xFF) + 1) & 0xFF; //8ビットにおける2の補数をとる
+                        val2c = (val2c ^ 0xFF) + 1; //8ビットにおける2の補数をとる
                         valc = val1c + val2c; //8ビット目までしかなくて, 9ビット目以降が全部0だと思って演算
                     }
                     else if (opecode == 9) {
