@@ -284,7 +284,7 @@ var KUEChip2Core = /** @class */ (function () {
                         val2 = this.memory[this.reg["MAR"]];
                     val1 &= 0xFF;
                     val2 &= 0xFF;
-                    var val1c = val1, val2c = val2, valc; //キャリ-フラグ計算用
+                    var val1c = val1, val2c = val2, valc; //キャリーフラグ計算用
                     if (val1 & 0x80)
                         val1 |= ~0xFF;
                     if (val2 & 0x80)
