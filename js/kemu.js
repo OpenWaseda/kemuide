@@ -284,7 +284,7 @@ var KUEChip2Core = /** @class */ (function () {
                         val2 = this.memory[this.reg["MAR"]];
                     val1 &= 0xFF;
                     val2 &= 0xFF;
-                    var val1c = val1, val2c = val2, valc; //8ビットまでしかなくて9ビット目以降が全部0のはずの数たち
+                    var val1c = val1, val2c = val2, valc; //キャリ-フラグ計算用
                     if (val1 & 0x80)
                         val1 |= ~0xFF;
                     if (val2 & 0x80)
@@ -315,7 +315,7 @@ var KUEChip2Core = /** @class */ (function () {
                         cf = (valc & ~0xFF) == 0; //9ビット目以降が立っていなければ桁あふれなしでcf = true
                     }
                     else if (opecode == 9) {
-                        cf = (valc & ~0xFF) > 0; //存在しないはずの9ビット目以降のビット立っていたら桁あふれ
+                        cf = (valc & ~0xFF) != 0; //存在しないはずの9ビット目以降のビット立っていたら桁あふれ
                     }
                     if (12 <= opecode && opecode <= 14)
                         vf = false;
