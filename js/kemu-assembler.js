@@ -205,7 +205,7 @@
 							if (val != -1) {
 								this.binary[addr++] = val;
 								if (val == -2) {
-									patches.push({address: addr - 1, token: a, line: l, mask: (startBrace == '(' ? 0x1FF : 0xFF)});
+									patches.push({op: op, address: addr - 1, token: a, line: l, mask: (startBrace == '(' ? 0x1FF : 0xFF)});
 								}
 							}
 							// if (op == 6) { // LD
@@ -226,8 +226,9 @@
 						} else if (a[0] == "END") {
 							ended = l;
 						} else if (branchCC[a[0]] != undefined) {
-							this.binary[addr++] = branchCC[a[0]] + 48;
-							patches.push({address: addr, token: a.slice(1), line:l, mask: 0xFF});
+							var op = branchCC[a[0]] + 48;
+							this.binary[addr++] = op;
+							patches.push({op: op, address: addr, token: a.slice(1), line:l, mask: 0xFF});
 							meta.jumpTo = addr;
 							if (a[0] == "BA") meta.jumpMode = -2;
 							else meta.jumpMode = 1;
@@ -259,14 +260,27 @@
 			}
 			for (var i = 0; i < patches.length; i++) {
 				var addr = patches[i].address, token = patches[i].token;
+				var op = patches[i].op;
 				for (var j = 0; j < token.length; j++) {
 					if (labels[token[j]]) {
 						token[j] = labels[token[j]].value;
 					}
 				}
+				var arithNum = null;
+				if ([8, 9, 10, 11, 15].indexOf(op) >= 0) {
+					// Arithmetic command
+					if (token.length == 1) arithNum = token[0];
+				}
 				try {
 					var val = this.calculate(token);
 					if ((val < 0 ? ~val : val) & (~patches[i].mask)) throw new KasmException("定数値 " + val + "が大きすぎます");
+					if (arithNum !== null && val >= 0x80) {
+						var nn = (~val & 0xFF) + 1;
+						var realNum = Math.abs(nn).toString(16).toUpperCase() + "h";
+						if (nn >= 0xA0) realNum = "-0" + realNum;
+						else realNum = "-" + realNum;
+						this.message("情報(" + (patches[i].line+1) + "行目): 数値 " + arithNum + " は最上位ビットが1のため負数として扱われます。間違いを防ぐため、代わりに " + realNum + "と記述することをおすすめします。");
+					}
 					val &= 0xFF;
 					this.binary[addr] = val;
 				} catch (e) {
