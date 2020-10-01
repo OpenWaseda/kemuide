@@ -204,12 +204,12 @@ class KUEChip2Core
 						return;
 					}
 				}
-				if (opecode == 6) {
+				if (opecode == 6) {		// LD
 					var val = b < 2 ? ((b & 1) > 0 ? this.reg["IX"] : this.reg["ACC"]) :
 						this.memory[this.reg["MAR"]];
 					if (a == 0) this.reg["ACC"] = val;
 					else        this.reg["IX"]  = val;
-				} else if (opecode == 7) {
+				} else if (opecode == 7) {		// ST
 					var val = a > 0 ? this.reg["IX"] : this.reg["ACC"];
 					this.memory[this.reg["MAR"]] = val;
 				} else {
@@ -227,22 +227,22 @@ class KUEChip2Core
 					if (val1 & 0x80) val1 |= ~0xFF;
 					if (val2 & 0x80) val2 |= ~0xFF;
 
-					if      (opecode ==  8){
+					if      (opecode ==  8){    // SBC (Subtract with Carry)
 						val = val1 - val2 - (cf ? 1 : 0);//桁あふれのある引き算は2の補数で桁あふれのない足し算
 						val2c = val2c + (cf ? 1 : 0);//繰り下がりがあったら引く数に1をたす
 						val2c = (val2c ^ 0xFF) + 1;//8ビットにおける2の補数をとる
 						valc = val1c + val2c;//8ビット目までしかなくて, 9ビット目以降が全部0だと思って演算
 					}
-					else if (opecode ==  9) {
+					else if (opecode ==  9) {   // ADC (Add with Carry)
 						val = val1 + val2 + (cf ? 1 : 0);
 						valc = val1c + val2c + (cf ? 1 : 0); //8ビット目までしかなくて, 9ビット目以降が全部0だと思って演算
 					}
-					else if (opecode == 10) val = val1 - val2;
-					else if (opecode == 11) val = val1 + val2;
-					else if (opecode == 12) val = val1 ^ val2;
-					else if (opecode == 13) val = val1 | val2;
-					else if (opecode == 14) val = val1 & val2;
-					else if (opecode == 15) val = val1 - val2;
+					else if (opecode == 10) val = val1 - val2;  // SUB
+					else if (opecode == 11) val = val1 + val2;  // ADD
+					else if (opecode == 12) val = val1 ^ val2;  // EOR
+					else if (opecode == 13) val = val1 | val2;  // OR
+					else if (opecode == 14) val = val1 & val2;  // AND
+					else if (opecode == 15) val = val1 - val2;  // CMP
 					if (opecode == 8) {	// SBC
 						cf = (valc & ~0xFF) == 0;//9ビット目以降が立っていなければ桁あふれなしでcf = true
 					}else if (opecode == 9) {	//ADC
