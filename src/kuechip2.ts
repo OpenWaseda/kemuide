@@ -193,14 +193,18 @@ class KUEChip2Core
 						if ((b & 1) > 0) d += 0x100;
 						if ((b & 2) > 0) {
 							var xx = this.reg["IX"];
-							if (xx & 0x80) {
-								xx = (~xx & 0xFF) + 1;
-								d -= xx;
-							} else {
-								d += xx;
-							}
+							// The behavior is not correct.
+							// See https://github.com/OpenWaseda/kemuide/issues/12
+							// if (xx & 0x80) {
+							// 	xx = (~xx & 0xFF) + 1;
+							// 	d -= xx;
+							// } else {
+							// 	d += xx;
+							// }
+							d += xx;
 						}
-						this.reg["MAR"] = d;
+						// TODO: What is collect when d > 0x1FF?
+						this.reg["MAR"] = d & 0x1FF;
 						return;
 					}
 				}

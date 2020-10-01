@@ -1,4 +1,4 @@
-var KUEChip2Core = /** @class */ (function () {
+var KUEChip2Core = (function () {
     function KUEChip2Core() {
         this.memory = [];
         this.reg = {
@@ -248,15 +248,18 @@ var KUEChip2Core = /** @class */ (function () {
                             d += 0x100;
                         if ((b & 2) > 0) {
                             var xx = this.reg["IX"];
-                            if (xx & 0x80) {
-                                xx = (~xx & 0xFF) + 1;
-                                d -= xx;
-                            }
-                            else {
-                                d += xx;
-                            }
+                            // The behavior is not correct.
+                            // See https://github.com/OpenWaseda/kemuide/issues/12
+                            // if (xx & 0x80) {
+                            // 	xx = (~xx & 0xFF) + 1;
+                            // 	d -= xx;
+                            // } else {
+                            // 	d += xx;
+                            // }
+                            d += xx;
                         }
-                        this.reg["MAR"] = d;
+                        // TODO: What is collect when d > 0x1FF?
+                        this.reg["MAR"] = d & 0x1FF;
                         return;
                     }
                 }
@@ -300,17 +303,17 @@ var KUEChip2Core = /** @class */ (function () {
                         valc = val1c + val2c + (cf ? 1 : 0); //8ビット目までしかなくて, 9ビット目以降が全部0だと思って演算
                     }
                     else if (opecode == 10)
-                        val = val1 - val2;
+                        val = val1 - val2; // SUB
                     else if (opecode == 11)
-                        val = val1 + val2;
+                        val = val1 + val2; // ADD
                     else if (opecode == 12)
-                        val = val1 ^ val2;
+                        val = val1 ^ val2; // EOR
                     else if (opecode == 13)
-                        val = val1 | val2;
+                        val = val1 | val2; // OR
                     else if (opecode == 14)
-                        val = val1 & val2;
+                        val = val1 & val2; // AND
                     else if (opecode == 15)
-                        val = val1 - val2;
+                        val = val1 - val2; // CMP
                     if (opecode == 8) {
                         cf = (valc & ~0xFF) == 0; //9ビット目以降が立っていなければ桁あふれなしでcf = true
                     }
@@ -347,4 +350,4 @@ var KUEChip2Core = /** @class */ (function () {
         }
     };
     return KUEChip2Core;
-}());
+})();
