@@ -322,7 +322,7 @@
 					}
 				}
 			}
-			if (metadata[i - 1].jumpMode >= 0 && metadata[i - 1].reachable) {
+			if (metadata.length == 0 || (metadata[i - 1].jumpMode >= 0 && metadata[i - 1].reachable)) {
 				this.message("エラー: プログラムの末尾に 'HLT' 命令がありません。CPUが暴走する可能性が有ります。'HLT' を補ってください。");
 				errorCount++;
 			}
