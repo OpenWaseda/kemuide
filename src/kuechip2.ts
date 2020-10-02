@@ -190,7 +190,6 @@ class KUEChip2Core
 						return;
 					} else if (p == 3 && b >= 4) {
 						var d = this.memory[this.reg["MAR"]];
-						if ((b & 1) > 0) d += 0x100;
 						if ((b & 2) > 0) {
 							var xx = this.reg["IX"];
 							// The behavior is not correct.
@@ -203,8 +202,9 @@ class KUEChip2Core
 							// }
 							d += xx;
 						}
-						// TODO: What is collect when d > 0x1FF?
-						this.reg["MAR"] = d & 0x1FF;
+						d &= 0xFF;
+						if ((b & 1) > 0) d += 0x100;
+						this.reg["MAR"] = d;
 						return;
 					}
 				}
