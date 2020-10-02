@@ -279,7 +279,7 @@
 						var realNum = Math.abs(nn).toString(16).toUpperCase() + "h";
 						if (nn >= 0xA0) realNum = "-0" + realNum;
 						else realNum = "-" + realNum;
-						this.message("情報(" + (patches[i].line+1) + "行目): 数値 " + arithNum + " は最上位ビットが1のため負数として扱われます。間違いを防ぐため、代わりに " + realNum + "と記述することをおすすめします。");
+						this.message("情報(" + (patches[i].line+1) + "行目): 数値 " + arithNum +  " ( 0" + Math.abs(arithNum).toString(16).toUpperCase() + "h ) は最上位ビットが1のため負数として扱われます。間違いを防ぐため、代わりに " + realNum + "と記述することをおすすめします。");
 					}
 					val &= 0xFF;
 					this.binary[addr] = val;
